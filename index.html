@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Μηνιαία Έξοδα Pro — Αυτόνομη Έκδοση</title>
+
   <link rel="manifest" href="./manifest.json">
 
-  <!-- TailwindCSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -19,12 +19,10 @@
     }
   </script>
 
-  <!-- jsPDF + Sortable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.js"></script>
 
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
@@ -73,45 +71,10 @@
       margin-bottom: 1.5rem;
       color: #4a5568;
     }
-
-    /* Splash Screen Styles */
-    #splashScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #5D5CDE;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      opacity: 1;
-      transition: opacity 0.5s ease-out;
-    }
-    #splashScreen.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .splash-text {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-top: 1rem;
-    }
   </style>
 </head>
 
 <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 h-full">
-
-  <!-- Splash Screen -->
-  <div id="splashScreen">
-    <div class="text-7xl">💸</div>
-    <div class="splash-text">Μηνιαία Έξοδα Pro</div>
-  </div>
-
-  <!-- Notifications -->
   <div id="notifications" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
   <header class="border-b border-gray-200 dark:border-gray-800">
@@ -134,7 +97,6 @@
   </header>
 
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
-    <!-- Μήνας + Στατιστικά + Υπενθυμίσεις -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-4">
         <div class="flex items-center gap-4">
@@ -167,12 +129,10 @@
       </aside>
     </section>
 
-    <!-- Φίλτρα Κατηγοριών -->
     <section class="space-y-3">
       <h3 class="sr-only">Φίλτρα Κατηγοριών</h3>
       <div class="flex flex-wrap gap-2" id="categoryFilters">
-        <!-- Buttons injected -->
-      </div>
+        </div>
       <div class="flex flex-col md:flex-row items-center gap-3">
         <input id="searchInput" type="search" placeholder="Αναζήτηση τίτλου/σημειώσεων…" class="w-full md:w-80 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
         <select id="statusFilter" class="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -190,10 +150,8 @@
       </div>
     </section>
 
-    <!-- Λίστα Εξόδων -->
     <section>
       <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-        <!-- Desktop Header -->
         <div class="hidden lg:grid grid-cols-[32px_1fr_110px_130px_120px_100px_140px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 text-xs font-semibold uppercase tracking-wide">
           <div></div>
           <div>Τίτλος</div>
@@ -204,24 +162,34 @@
           <div>Ενέργειες</div>
         </div>
         <ul id="expenseList" class="divide-y divide-gray-200 dark:divide-gray-800">
-          <!-- Items injected -->
-        </ul>
+          </ul>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="mt-10 border-t border-gray-200 dark:border-gray-800">
     <div class="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-2 gap-6">
       <div>
         <h4 class="font-bold text-lg">Σχετικά</h4>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Αυτόνομη εφαρμογή διαχείρισης μηνιαίων εξόδων με αποθήκευση στον browser, υποστηρικτικές υπενθυμίσεις και εξαγωγή PDF/JSON.</p>
       </div>
+      <form id="contactForm" class="space-y-3">
+        <h4 class="font-bold text-lg">Επικοινωνία</h4>
+        <div>
+          <label for="contactName" class="text-sm">Όνομα</label>
+          <input id="contactName" name="name" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900" placeholder="Το όνομά σας">
+        </div>
+        <div>
+          <label for="contactEmail" class="text-sm">Email</label>
+          <input id="contactEmail" name="email" type="email" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900" placeholder="you@example.com">
+        </div>
+        <button class="bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">Υποβολή</button>
+        <p id="contactMsg" class="text-sm"></p>
+      </form>
     </div>
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 pb-6">© <span id="year"></span> Μηνιαία Έξοδα Pro</div>
   </footer>
 
-  <!-- Dialogs -->
   <dialog id="addDialog" class="rounded-lg p-0 w-full max-w-lg">
     <form id="addForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
       <h3 class="text-xl font-semibold mb-4">Προσθήκη/Επεξεργασία Εξόδου</h3>
@@ -238,8 +206,7 @@
         <div>
           <label class="text-sm">Κατηγορία</label>
           <select id="categoryInput" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
-            <!-- options injected -->
-          </select>
+            </select>
         </div>
         <div>
           <label class="text-sm">Ημ/νία Λήξης</label>
@@ -278,8 +245,7 @@
           <label class="text-sm">Τρόπος Πληρωμής</label>
           <div class="flex items-center gap-2">
             <select id="payMethod" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
-              <!-- options injected -->
-            </select>
+              </select>
             <button type="button" id="addPayMethod" class="w-10 h-10 flex-shrink-0 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:ring-2 ring-primary transition">+</button>
           </div>
         </div>
@@ -299,14 +265,12 @@
     </form>
   </dialog>
 
-  <!-- Updated Bulk Dialog -->
   <dialog id="bulkDialog" class="rounded-lg p-0 w-full max-w-xl">
     <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <h3 class="text-xl font-semibold mb-4">Μαζική Διαχείριση Μηνιαίων Εξόδων</h3>
       <div class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
         <div id="bulkList" class="divide-y divide-gray-200 dark:divide-gray-800">
-          <!-- Expense list injected by JS -->
-        </div>
+          </div>
       </div>
       <div class="mt-6 flex justify-end gap-2">
         <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('bulkDialog').close()">Ακύρωση</button>
@@ -323,8 +287,7 @@
       </div>
       <div class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
         <ul id="categoryList" class="divide-y divide-gray-200 dark:divide-gray-800">
-          <!-- Category items injected -->
-        </ul>
+          </ul>
       </div>
       <form id="categoryForm" class="mt-6 space-y-3">
         <input type="hidden" id="categoryId">
@@ -348,8 +311,7 @@
     <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <h3 class="text-xl font-semibold mb-4">Ιστορικό Πληρωμών</h3>
       <div id="paymentHistoryList" class="space-y-4 custom-scrollbar max-h-64 overflow-y-auto">
-        <!-- History items injected -->
-      </div>
+        </div>
       <div class="mt-6 flex justify-between items-center">
         <button id="undoPaymentBtn" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm" data-id="">Αναίρεση Τελευταίας</button>
         <button class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('historyDialog').close()">Κλείσιμο</button>
@@ -357,7 +319,6 @@
     </div>
   </dialog>
   
-  <!-- Confirmation Dialog -->
   <div id="confirmation-overlay" class="confirmation-box-overlay"></div>
   <div id="confirmation-dialog" class="confirmation-box">
     <h3 id="confirmation-title" class="text-gray-900 dark:text-gray-100">Επιβεβαίωση</h3>
@@ -669,12 +630,10 @@
         const paidClass = isPaid ? 'line-through opacity-60' : '';
         
         li.innerHTML = `
-        <!-- Drag handle (always visible) -->
         <div class="absolute inset-y-0 -left-6 flex items-center justify-center w-6">
             <div class="drag-handle w-4 h-4 rounded-full bg-gray-400 dark:bg-gray-600"></div>
         </div>
 
-        <!-- Mobile Layout -->
         <div class="lg:hidden flex flex-col gap-2 p-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
@@ -710,7 +669,6 @@
             </div>
         </div>
 
-        <!-- Desktop Layout -->
         <div class="hidden lg:grid grid-cols-[32px_1fr_110px_130px_120px_100px_140px] items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
           <button class="toggle-status-btn" data-id="${x.id}" aria-label="Εναλλαγή κατάστασης πληρωμής">
             <div class="w-6 h-6 rounded-full border-2 border-current ${isPaid ? 'bg-green-500 border-green-500' : ''}"></div>
@@ -1213,14 +1171,7 @@
     // =========================
     // Event Listeners
     // =========================
-    function initApp(){
-      // Hide splash screen after a delay
-      setTimeout(() => {
-        el('splashScreen').classList.add('fade-out');
-        // Optional: remove splash screen from DOM after transition
-        setTimeout(() => el('splashScreen').remove(), 500); 
-      }, 3000); // 3 seconds delay
-
+    document.addEventListener('DOMContentLoaded', () => {
       seedIfEmpty();
       applyStoredTheme();
       renderAll();
@@ -1293,36 +1244,38 @@
         state.sort = e.target.value;
         renderList();
       });
+
+      // Footer contact form logic
+      el('contactForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = el('contactName').value;
+        const email = el('contactEmail').value;
+        console.log('Contact form submitted:', { name, email });
+        el('contactMsg').textContent = 'Σας ευχαριστούμε για το μήνυμά σας!';
+        el('contactForm').reset();
+      });
+    });
+    
+    // === PWA Functionality ===
+    
+    // Check if the browser supports Service Workers
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        // IMPORTANT: Replace <repository-name> with your actual repository name
+        navigator.serviceWorker.register('/<repository-name>/sw.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', initApp);
-
-// === PWA Functionality ===
-    
-// Check if the browser supports Service Workers
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    // Register the Service Worker
-    // IMPORTANT: Replace <repository-name> with your actual repository name
-    navigator.serviceWorker.register('/My.Exoda/sw.js').then(function(registration) {
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    }, function(err) {
-      console.log('ServiceWorker registration failed: ', err);
+    // This code handles the installation prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
     });
-  });
-}
-
-// This code handles the installation prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
   </script>
 </body>
 </html>
-
-
-
-
-
