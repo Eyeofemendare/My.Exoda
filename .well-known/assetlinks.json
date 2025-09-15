@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.marios.myexoda",
+    "sha256_cert_fingerprints":
+    ["4C:0B:25:01:64:98:AD:67:4D:29:7E:E2:52:9E:CD:52:0A:91:AB:4C:67:1B:85:59:B7:02:E4:5E:05:D0:0A:5F"]
+  }
+}]
