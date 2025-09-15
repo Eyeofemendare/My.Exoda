@@ -108,7 +108,7 @@
         </div>
       </div>
       <aside class="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
-        <h3 class="text-lg font-semibold mb-3">Υπενθυμίσεις (7 ημέρες)</h3>
+        <h3 class="text-lg font-semibold mb-3">Ανεξόφλητα Έξοδα</h3>
         <div id="upcomingReminders" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
       </aside>
     </section>
@@ -155,7 +155,7 @@
     <div class="max-w-6xl mx-auto px-4 py-8">
       <div>
         <h4 class="font-bold text-lg">Σχετικά</h4>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Αυτόνομη εφαρμογή διαχείρισης μηνιαίων εξόδων.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Αυτόνομη εφαρμογή διαχείρισης μηνιαίων εξόδων με αποθήκευση στον browser, υποστηρικτικές υπενθυμίσεις και εξαγωγή PDF/JSON.</p>
       </div>
     </div>
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 pb-6">© <span id="year"></span> Μηνιαία Έξοδα Pro</div>
@@ -558,20 +558,17 @@
     function renderReminders(){
       const holder = el('upcomingReminders');
       holder.innerHTML = '';
-      const today = new Date();
-      const week = addDays(today, 7);
-      const upcoming = state.expenses
-        .filter(x=> x.payments && x.payments.length === 0 && x.dueDate)
-        .filter(x=>{
-          const d = fromYMD(x.dueDate);
-          return d && d>=today && d<=week;
-        })
-        .sort((a,b)=> a.dueDate.localeCompare(b.dueDate));
-      if (!upcoming.length){
-        holder.innerHTML = `<div class="text-gray-500">Καμία υπενθύμιση για την επόμενη εβδομάδα.</div>`;
+      
+      const unpaid = state.expenses
+        .filter(x => !x.payments || x.payments.length === 0)
+        .sort((a,b) => (a.dueDate||'').localeCompare(b.dueDate||''));
+        
+      if (!unpaid.length){
+        holder.innerHTML = `<div class="text-gray-500">Δεν υπάρχουν ανεξόφλητα έξοδα.</div>`;
         return;
       }
-      upcoming.forEach(x=>{
+      
+      unpaid.forEach(x => {
         const d = new Date(x.dueDate).toLocaleDateString('el-GR');
         const row = document.createElement('div');
         row.className = "flex items-center justify-between bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2";
@@ -904,18 +901,42 @@
     }
 
 
-    function exportData(){
-      const data = JSON.stringify(state.expenses, null, 2);
-      const blob = new Blob([data], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `expenses_export_${toYMD(new Date())}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      notify('Τα δεδομένα εξήχθησαν!', 'success');
+    async function exportData(){
+        const data = JSON.stringify(state.expenses, null, 2);
+        const fileName = `expenses_export_${toYMD(new Date())}.json`;
+        
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(data);
+                await writable.close();
+                notify('Τα δεδομένα εξήχθησαν!', 'success');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error(err);
+                    notify('Αποτυχία εξαγωγής. Δοκιμάστε ξανά.', 'error');
+                }
+            }
+        } else {
+            // Fallback for browsers without showSaveFilePicker
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            notify('Τα δεδομένα εξήχθησαν! (Αποθηκεύτηκαν στο φάκελο Λήψεων)', 'success');
+        }
     }
 
     function importData(e){
@@ -1245,4 +1266,3 @@
   </script>
 </body>
 </html>
-
