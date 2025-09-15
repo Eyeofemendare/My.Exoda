@@ -1,6 +1,6 @@
 {
   "name": "Μηνιαία Έξοδα Pro",
-  "short_name": "Έξοδα Pro",
+  "short_name": "My.Exoda",
   "description": "Η προσωπική σου εφαρμογή για τη διαχείριση μηνιαίων εξόδων.",
   "start_url": "./index.html",
   "display": "standalone",
@@ -8,12 +8,12 @@
   "theme_color": "#5D5CDE",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
