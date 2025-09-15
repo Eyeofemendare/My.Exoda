@@ -152,24 +152,11 @@
   </main>
 
   <footer class="mt-10 border-t border-gray-200 dark:border-gray-800">
-    <div class="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-2 gap-6">
+    <div class="max-w-6xl mx-auto px-4 py-8">
       <div>
         <h4 class="font-bold text-lg">Σχετικά</h4>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Αυτόνομη εφαρμογή διαχείρισης μηνιαίων εξόδων με αποθήκευση στον browser, υποστηρικτικές υπενθυμίσεις και εξαγωγή PDF/JSON.</p>
       </div>
-      <form id="contactForm" class="space-y-3">
-        <h4 class="font-bold text-lg">Επικοινωνία</h4>
-        <div>
-          <label for="contactName" class="text-sm">Όνομα</label>
-          <input id="contactName" name="name" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900" placeholder="Το όνομά σας">
-        </div>
-        <div>
-          <label for="contactEmail" class="text-sm">Email</label>
-          <input id="contactEmail" name="email" type="email" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900" placeholder="you@example.com">
-        </div>
-        <button class="bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">Υποβολή</button>
-        <p id="contactMsg" class="text-sm"></p>
-      </form>
     </div>
     <div class="text-center text-xs text-gray-500 dark:text-gray-400 pb-6">© <span id="year"></span> Μηνιαία Έξοδα Pro</div>
   </footer>
@@ -1233,16 +1220,6 @@
         state.sort = e.target.value;
         renderList();
       });
-
-      // Footer contact form logic
-      el('contactForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = el('contactName').value;
-        const email = el('contactEmail').value;
-        console.log('Contact form submitted:', { name, email });
-        el('contactMsg').textContent = 'Σας ευχαριστούμε για το μήνυμά σας!';
-        el('contactForm').reset();
-      });
     });
     
     // === PWA Functionality ===
@@ -1268,6 +1245,3 @@
   </script>
 </body>
 </html>
-
-
-
