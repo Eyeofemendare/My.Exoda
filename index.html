@@ -801,34 +801,27 @@
       dialog.showModal();
     }
     
-    function handlePayment(e){
-        e.preventDefault();
-        const id = el('payExpenseId').value;
-        const exp = getExpenseById(id);
-        if (!exp) return;
+    function handlePayment(e) {
+    e.preventDefault();
+    const id = el('payExpenseId').value;
+    const exp = getExpenseById(id);
+    if (!exp) return;
 
-        const newPayment = {
-            amount: Number(el('payAmount').value) || 0,
-            date: el('payDate').value,
-            method: el('payMethod').value,
-            notes: el('payNotes').value,
-            transactionNumber: el('payTransactionNumber').value
-        };
+    const newPayment = {
+        amount: Number(el('payAmount').value) || 0,
+        date: el('payDate').value,
+        method: el('payMethod').value,
+        notes: el('payNotes').value,
+        transactionNumber: el('payTransactionNumber').value
+    };
 
-        if (!exp.payments) exp.payments = [];
-        exp.payments.push(newPayment);
+    if (!exp.payments) exp.payments = [];
+    exp.payments.push(newPayment);
 
-        // If paid and has a repeat interval, create a new one
-        if (exp.repeatInterval > 0) {
-            const nextDueDate = addMonths(fromYMD(exp.dueDate), exp.repeatInterval);
-            const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval);
-            state.expenses.unshift(newExp);
-        }
-        
-        persist();
-        renderAll();
-        notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
-        el('payDialog').close();
+    persist();
+    renderAll();
+    notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
+    el('payDialog').close();
     }
 
     function openBulkDialog() {
@@ -1266,3 +1259,4 @@
   </script>
 </body>
 </html>
+
