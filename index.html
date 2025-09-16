@@ -353,6 +353,67 @@
           mkExpense('Super Market', 120.90, 'food', addDays(new Date(), 2), false, '', 0),
           mkExpense('Κινητό', 17.50, 'utilities', addDays(new Date(), 18), false, '', 0),
         ];
+        function checkAndCreateRecurringExpenses() {
+    const today = new Date();
+    const currentMonthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    let changesMade = false;
+
+    const lastCheckDateStr = localStorage.getItem('last_recurrence_check');
+    const lastCheckDate = lastCheckDateStr ? new Date(lastCheckDateStr) : new Date(0);
+
+    // Filter expenses that are paid and have a repeat interval
+    const recurringExpenses = state.expenses.filter(x => x.repeatInterval > 0 && x.payments && x.payments.length > 0);
+    
+    recurringExpenses.forEach(exp => {
+        // Get the date of the last payment
+        const lastPaymentDate = fromYMD(exp.payments[exp.payments.length - 1].date);
+        
+        if (!lastPaymentDate) return;
+
+        let nextDueDate = fromYMD(exp.dueDate);
+        
+        // Loop to find the next due date based on the last payment date
+        while (nextDueDate < today) {
+            nextDueDate = addMonths(nextDueDate, exp.repeatInterval);
+        }
+        
+        // Check if the new due date is in the future
+        if (nextDueDate > currentMonthEnd) {
+            return;
+        }
+
+        // Check if a new instance for this month already exists
+        const newInstanceExists = state.expenses.some(e => 
+            e.title === exp.title && 
+            e.amount === exp.amount &&
+            e.category === exp.category &&
+            e.dueDate === toYMD(nextDueDate) &&
+            (e.payments && e.payments.length === 0)
+        );
+
+        // If no new instance exists, create one
+        if (!newInstanceExists) {
+            const newExp = mkExpense(
+                exp.title, 
+                exp.amount, 
+                exp.category, 
+                nextDueDate, 
+                false, 
+                exp.notes, 
+                exp.repeatInterval
+            );
+            state.expenses.unshift(newExp);
+            changesMade = true;
+            notify(`Δημιουργήθηκε νέο επαναλαμβανόμενο έξοδο: "${newExp.title}"`, 'info');
+        }
+    });
+
+    if (changesMade) {
+        persist();
+    }
+    localStorage.setItem('last_recurrence_check', today.toISOString());
+        }
+        
         persist();
       } else {
         try { 
@@ -1161,9 +1222,12 @@
     // =========================
     // Event Listeners
     // =========================
-    document.addEventListener('DOMContentLoaded', () => {
-      seedIfEmpty();
-      applyStoredTheme();
+      document.addEventListener('DOMContentLoaded', () => {
+    seedIfEmpty();
+    applyStoredTheme();
+    
+    // Κάλεσε τη νέα συνάρτηση εδώ
+    checkAndCreateRecurringExpenses(); 
       renderAll();
 
       el('themeToggle').addEventListener('click', toggleTheme);
@@ -1259,4 +1323,5 @@
   </script>
 </body>
 </html>
+
 
