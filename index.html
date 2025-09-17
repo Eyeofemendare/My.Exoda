@@ -25,559 +25,1214 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    html, body { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @media print {
-      body {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .no-print { display: none; }
+    html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar{ width:8px; height:8px;}
+    .custom-scrollbar::-webkit-scrollbar-track{ background:#f1f1f1; border-radius:10px;}
+    .dark .custom-scrollbar::-webkit-scrollbar-track{ background:#374151;}
+    .custom-scrollbar::-webkit-scrollbar-thumb{ background:#9ca3af; border-radius:10px;}
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover{ background:#6b7280;}
+    .notification{ animation: slideInRight .25s ease-out;}
+    @keyframes slideInRight{ from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1}}
+    .sortable-ghost{ opacity:.4 }
+    .drag-handle{ cursor:grab }
+    .drag-handle:active{ cursor:grabbing }
+    dialog::backdrop{ background: rgba(0,0,0,.35); }
+    .confirmation-box {
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      max-width: 350px;
+      width: 90%;
+      text-align: center;
+    }
+    .confirmation-box h3 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .confirmation-box p {
+      margin-bottom: 1.5rem;
+      color: #4a5568;
     }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 font-sans h-full overflow-hidden">
 
-  <div id="app" class="h-full w-full flex flex-col">
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 h-full">
+  <div id="notifications" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-    <header class="bg-primary text-white p-4 shadow-md no-print relative">
-      <div class="container mx-auto flex items-center justify-between">
-        <h1 class="text-2xl font-bold flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-          </svg>
-          Μηνιαία Έξοδα Pro
-        </h1>
-        <div class="flex items-center">
-          <div class="relative group ml-4">
-            <button id="menuBtn" class="flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
-              </svg>
-            </button>
-            <div id="menuContent" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-              <button id="importBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">Εισαγωγή</button>
-              <button id="exportBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">Εξαγωγή</button>
-              <button id="printBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">Εκτύπωση</button>
-              <button id="darkModeBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                <span id="darkModeText">Σκοτεινή Λειτουργία</span>
-              </button>
-              <button id="installBtn" class="hidden w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">Εγκατάσταση Εφαρμογής</button>
-              <button id="aboutBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">Σχετικά με</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="flex-grow overflow-hidden flex flex-col p-4 no-print">
-      
-      <div class="flex flex-col md:flex-row items-center justify-between mb-4 space-y-2 md:space-y-0 md:space-x-4">
-        <div class="flex-grow w-full md:w-auto">
-          <input type="text" id="searchInput" placeholder="Αναζήτηση..." class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-        </div>
-        <div class="flex items-center space-x-2 w-full md:w-auto">
-          <select id="statusFilter" class="p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-1/2 md:w-auto">
-            <option value="all">Όλα</option>
-            <option value="due">Απλήρωτα</option>
-            <option value="paid">Πληρωμένα</option>
-          </select>
-          <select id="sortSelect" class="p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-1/2 md:w-auto">
-            <option value="dueDateAsc">Ημερομηνία (παλαιότερο)</option>
-            <option value="dueDateDesc">Ημερομηνία (νεότερο)</option>
-            <option value="amountAsc">Ποσό (αύξουσα)</option>
-            <option value="amountDesc">Ποσό (φθίνουσα)</option>
-          </select>
-        </div>
-      </div>
-      
-      <div class="flex-grow overflow-y-auto no-scrollbar pb-4" id="expenseList">
-        </div>
-      
-      <div class="no-print mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md flex items-center justify-between">
-        <span class="text-lg font-semibold">Σύνολο: <span id="totalAmount">0.00€</span></span>
-        <button id="addExpenseBtn" class="px-4 py-2 bg-primary text-white rounded-md font-semibold hover:bg-blue-600 transition-colors duration-200">
-          Προσθήκη Εξόδου
+  <header class="border-b border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <h1 class="text-3xl font-extrabold text-primary">Μηνιαία Έξοδα Pro</h1>
+        <button id="themeToggle" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center hover:ring-2 ring-primary transition">
+          <span id="themeIcon" class="text-lg">🌙</span>
         </button>
       </div>
-      
-    </main>
+      <nav class="flex flex-wrap gap-2">
+        <button class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm" id="btnManageCategories">🏷️ Διαχείριση Κατηγοριών</button>
+        <button class="btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm" id="btnBulk">📅 Μαζική Καταχώρηση</button>
+        <button class="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm" id="btnPDF">📄 Εξαγωγή PDF</button>
+        <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm" id="btnExport">💾 Export</button>
+        <button class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm" id="btnImport">📂 Import</button>
+        <button class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm" id="btnAdd">+ Προσθήκη Εξόδου</button>
+      </nav>
+    </div>
+  </header>
 
-    <div id="expenseModal" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 id="modalTitle" class="text-xl font-bold mb-4">Νέο Έξοδο</h2>
-        <form id="expenseForm">
-          <input type="hidden" id="expenseId" name="id">
-          <div class="mb-4">
-            <label for="title" class="block text-sm font-medium mb-1">Τίτλος</label>
-            <input type="text" id="title" name="title" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="flex items-center gap-4">
+            <button id="prevMonthBtn" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center hover:ring-2 ring-primary transition text-lg">&lt;</button>
+            <h2 id="currentMonth" class="text-2xl font-semibold flex-grow text-center"></h2>
+            <button id="nextMonthBtn" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center hover:ring-2 ring-primary transition text-lg">&gt;</button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="p-4 rounded-lg bg-blue-100 dark:bg-blue-900/40">
+            <div class="text-sm text-blue-700 dark:text-blue-300">Συνολικά Έξοδα</div>
+            <div id="totalExpensesCount" class="text-xl font-bold">0</div>
           </div>
-          <div class="mb-4">
-            <label for="amount" class="block text-sm font-medium mb-1">Ποσό (€)</label>
-            <input type="number" id="amount" name="amount" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" step="0.01" required>
+          <div class="p-4 rounded-lg bg-green-100 dark:bg-green-900/40">
+            <div class="text-sm text-green-700 dark:text-green-300">Πληρωμένα</div>
+            <div id="paidCount" class="text-xl font-bold">0</div>
           </div>
-          <div class="mb-4">
-            <label for="category" class="block text-sm font-medium mb-1">Κατηγορία</label>
-            <select id="category" name="category" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-              <option value="none">Καμία</option>
-              <option value="Ενοίκιο">Ενοίκιο</option>
-              <option value="Λογαριασμοί">Λογαριασμοί</option>
-              <option value="Διατροφή">Διατροφή</option>
-              <option value="Μετακίνηση">Μετακίνηση</option>
-              <option value="Ψυχαγωγία">Ψυχαγωγία</option>
-              <option value="Υγεία">Υγεία</option>
-              <option value="Εκπαίδευση">Εκπαίδευση</option>
-              <option value="Άλλα">Άλλα</option>
+          <div class="p-4 rounded-lg bg-red-100 dark:bg-red-900/40">
+            <div class="text-sm text-red-700 dark:text-red-300">Ανεξόφλητα</div>
+            <div id="unpaidCount" class="text-xl font-bold">0</div>
+          </div>
+          <div class="p-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/40">
+            <div class="text-sm text-yellow-700 dark:text-yellow-300">Συνολικό Ποσό</div>
+            <div id="totalAmount" class="text-xl font-bold">0€</div>
+          </div>
+        </div>
+      </div>
+      <aside class="p-4 rounded-lg bg-gray-100 dark:bg-gray-800">
+        <h3 class="text-lg font-semibold mb-3">Ανεξόφλητα Έξοδα</h3>
+        <div id="upcomingReminders" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
+      </aside>
+    </section>
+
+    <section class="space-y-3">
+      <h3 class="sr-only">Φίλτρα Κατηγοριών</h3>
+      <div class="flex flex-wrap gap-2" id="categoryFilters">
+        </div>
+      <div class="flex flex-col md:flex-row items-center gap-3">
+        <input id="searchInput" type="search" placeholder="Αναζήτηση τίτλου/σημειώσεων…" class="w-full md:w-80 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <select id="statusFilter" class="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <option value="">Όλα</option>
+          <option value="paid">Μόνο πληρωμένα</option>
+          <option value="unpaid">Μόνο ανεξόφλητα</option>
+        </select>
+        <select id="sortSelect" class="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+          <option value="dueDateAsc">Ημ/νία λήξης ↑</option>
+          <option value="dueDateDesc">Ημ/νία λήξης ↓</option>
+          <option value="amountDesc">Ποσό ↓</option>
+          <option value="amountAsc">Ποσό ↑</option>
+          <option value="titleAsc">Τίτλος A–Ω</option>
+        </select>
+      </div>
+    </section>
+
+    <section>
+      <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+        <div class="hidden lg:grid grid-cols-[32px_1fr_110px_130px_120px_100px_140px] gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800 text-xs font-semibold uppercase tracking-wide">
+          <div></div>
+          <div>Τίτλος</div>
+          <div class="text-right">Ποσό</div>
+          <div>Κατηγορία</div>
+          <div>Ημ/νία Λήξης</div>
+          <div>Κατάσταση</div>
+          <div>Ενέργειες</div>
+        </div>
+        <ul id="expenseList" class="divide-y divide-gray-200 dark:divide-gray-800">
+          </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mt-10 border-t border-gray-200 dark:border-gray-800">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div>
+        <h4 class="font-bold text-lg">Σχετικά</h4>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Αυτόνομη εφαρμογή διαχείρισης μηνιαίων εξόδων με αποθήκευση στον browser, υποστηρικτικές υπενθυμίσεις και εξαγωγή PDF/JSON.</p>
+      </div>
+    </div>
+    <div class="text-center text-xs text-gray-500 dark:text-gray-400 pb-6">© <span id="year"></span> Μηνιαία Έξοδα Pro</div>
+  </footer>
+
+  <dialog id="addDialog" class="rounded-lg p-0 w-full max-w-lg">
+    <form id="addForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
+      <h3 class="text-xl font-semibold mb-4">Προσθήκη/Επεξεργασία Εξόδου</h3>
+      <input type="hidden" id="expenseId">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm">Τίτλος</label>
+          <input id="titleInput" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
+        <div>
+          <label class="text-sm">Ποσό (€)</label>
+          <input id="amountInput" type="number" min="0" step="0.01" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
+        <div>
+          <label class="text-sm">Κατηγορία</label>
+          <select id="categoryInput" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
             </select>
-          </div>
-          <div class="mb-4">
-            <label for="dueDate" class="block text-sm font-medium mb-1">Ημερομηνία Λήξης</label>
-            <input type="date" id="dueDate" name="dueDate" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
-          </div>
-          <div class="mb-4">
-            <label for="repeatInterval" class="block text-sm font-medium mb-1">Επανάληψη (μήνες)</label>
-            <input type="number" id="repeatInterval" name="repeatInterval" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" value="0">
-          </div>
-          <div class="mb-4">
-            <label for="notes" class="block text-sm font-medium mb-1">Σημειώσεις</label>
-            <textarea id="notes" name="notes" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-          </div>
-          <div class="flex justify-end space-x-2">
-            <button type="button" id="cancelExpenseBtn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">Ακύρωση</button>
-            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-colors duration-200">Αποθήκευση</button>
-          </div>
-        </form>
+        </div>
+        <div>
+          <label class="text-sm">Ημ/νία Λήξης</label>
+          <input id="dueDateInput" type="date" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
+        <div class="md:col-span-2">
+            <label class="text-sm">Επανάληψη (μήνες)</label>
+            <input id="repeatInput" type="number" min="0" value="0" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
       </div>
-    </div>
+      <div class="mt-3">
+        <label class="text-sm">Σημειώσεις</label>
+        <textarea id="notesInput" rows="3" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"></textarea>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('addDialog').close()">Ακύρωση</button>
+        <button id="saveExpense" class="px-4 py-2 rounded-lg bg-primary text-white">Αποθήκευση</button>
+      </div>
+    </form>
+  </dialog>
 
-    <div id="payModal" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold mb-4">Καταγραφή Πληρωμής</h2>
-        <form id="payForm">
-          <input type="hidden" id="payExpenseId">
-          <div class="mb-4">
-            <label for="payDate" class="block text-sm font-medium mb-1">Ημερομηνία Πληρωμής</label>
-            <input type="date" id="payDate" class="w-full p-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+  <dialog id="payDialog" class="rounded-lg p-0 w-full max-w-lg">
+    <form id="payForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
+      <h3 class="text-xl font-semibold mb-4">Καταγραφή Πληρωμής</h3>
+      <input type="hidden" id="payExpenseId">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm">Ποσό (€)</label>
+          <input id="payAmount" type="number" min="0" step="0.01" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
+        <div>
+          <label class="text-sm">Ημ/νία Πληρωμής</label>
+          <input id="payDate" type="date" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
+        <div>
+          <label class="text-sm">Τρόπος Πληρωμής</label>
+          <div class="flex items-center gap-2">
+            <select id="payMethod" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+              </select>
+            <button type="button" id="addPayMethod" class="w-10 h-10 flex-shrink-0 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg hover:ring-2 ring-primary transition">+</button>
           </div>
-          <div class="flex justify-end space-x-2">
-            <button type="button" id="cancelPayBtn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">Ακύρωση</button>
-            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-600 transition-colors duration-200">Καταγραφή</button>
-          </div>
-        </form>
+        </div>
+        <div>
+          <label class="text-sm">Αριθμός Συναλλαγής</label>
+          <input id="payTransactionNumber" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        </div>
       </div>
-    </div>
+      <div class="mt-3">
+        <label class="text-sm">Σημειώσεις Πληρωμής</label>
+        <textarea id="payNotes" rows="3" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"></textarea>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('payDialog').close()">Ακύρωση</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white">Καταγραφή</button>
+      </div>
+    </form>
+  </dialog>
 
-    <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg">
-        <h2 class="text-xl font-bold mb-4">Ιστορικό Πληρωμών</h2>
-        <div id="historyList" class="max-h-96 overflow-y-auto no-scrollbar">
+  <dialog id="bulkDialog" class="rounded-lg p-0 w-full max-w-xl">
+    <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <h3 class="text-xl font-semibold mb-4">Μαζική Διαχείριση Μηνιαίων Εξόδων</h3>
+      <div class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+        <div id="bulkList" class="divide-y divide-gray-200 dark:divide-gray-800">
           </div>
-        <div class="flex justify-end mt-4">
-          <button type="button" id="closeHistoryBtn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">Κλείσιμο</button>
-        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('bulkDialog').close()">Ακύρωση</button>
+        <button id="bulkSave" class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white">Αποθήκευση Αλλαγών</button>
       </div>
     </div>
-    
-    <div id="aboutModal" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md text-center">
-        <h2 class="text-xl font-bold mb-2">Σχετικά με</h2>
-        <p class="mb-4">
-          Αυτό το απλό PWA δημιουργήθηκε για να σας βοηθήσει να διαχειριστείτε τα μηνιαία σας έξοδα.
-        </p>
-        <div class="flex flex-col items-center space-y-2">
-          <a href="https://github.com/george-gregory/monthly-expenses-pro" target="_blank" class="text-primary hover:underline flex items-center">
-            <svg class="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.83 9.504.5.092.682-.217.682-.483 0-.237-.008-.865-.013-1.7-2.782.604-3.37-1.34-3.37-1.34-.454-1.156-1.11-1.46-1.11-1.46-.908-.62.068-.607.068-.607 1.004.07 1.532 1.03 1.532 1.03.89 1.527 2.343 1.084 2.91.828.092-.64.35-1.084.636-1.334-2.22-.25-4.555-1.11-4.555-4.943 0-1.09.39-1.984 1.03-2.675-.104-.252-.448-1.264.098-2.643 0 0 .84-.268 2.75 1.026.798-.222 1.63-.332 2.47-.337.838.005 1.67.115 2.47.337 1.91-1.294 2.75-1.026 2.75-1.026.546 1.379.202 2.39.098 2.643.64.69 1.03 1.584 1.03 2.675 0 3.842-2.335 4.69-4.565 4.935.36.31.678.92.678 1.855 0 1.336-.013 2.415-.013 2.748 0 .267.18.575.688.482C20.145 20.2 23 16.446 23 12.017 23 6.484 18.522 2 13 2z" clip-rule="evenodd" />
-            </svg>
-            GitHub Repository
-          </a>
+  </dialog>
+
+  <dialog id="categoryDialog" class="rounded-lg p-0 w-full max-w-lg">
+    <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <h3 class="text-xl font-semibold mb-4">Διαχείριση Κατηγοριών</h3>
+      <div class="flex justify-end mb-4">
+        <button id="addCategoryBtn" class="bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">+ Προσθήκη Κατηγορίας</button>
+      </div>
+      <div class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+        <ul id="categoryList" class="divide-y divide-gray-200 dark:divide-gray-800">
+          </ul>
+      </div>
+      <form id="categoryForm" class="mt-6 space-y-3">
+        <input type="hidden" id="categoryId">
+        <div>
+          <label class="text-sm">Ετικέτα</label>
+          <input id="categoryLabel" required class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
         </div>
-        <div class="flex justify-end mt-4">
-          <button type="button" id="closeAboutBtn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">Κλείσιμο</button>
+        <div>
+          <label class="text-sm">Εικονίδιο (emoji)</label>
+          <input id="categoryIcon" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
         </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('categoryDialog').close()">Ακύρωση</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-white">Αποθήκευση</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+  
+  <dialog id="historyDialog" class="rounded-lg p-0 w-full max-w-sm">
+    <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <h3 class="text-xl font-semibold mb-4">Ιστορικό Πληρωμών</h3>
+      <div id="paymentHistoryList" class="space-y-4 custom-scrollbar max-h-64 overflow-y-auto">
+        </div>
+      <div class="mt-6 flex justify-between items-center">
+        <button id="undoPaymentBtn" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm" data-id="">Αναίρεση Τελευταίας</button>
+        <button class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('historyDialog').close()">Κλείσιμο</button>
       </div>
     </div>
-    
-  </div>
+  </dialog>
+  
+  <dialog id="confirmation-dialog" class="confirmation-box">
+    <h3 id="confirmation-title" class="text-gray-900 dark:text-gray-100">Επιβεβαίωση</h3>
+    <p id="confirmation-text" class="text-gray-600 dark:text-gray-400"></p>
+    <div class="flex justify-center gap-4">
+      <button id="confirm-cancel" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200">Ακύρωση</button>
+      <button id="confirm-ok" class="px-4 py-2 rounded-lg bg-red-600 text-white">Επιβεβαίωση</button>
+    </div>
+  </dialog>
+
+  <input id="importInput" type="file" accept="application/json" class="hidden"/>
 
   <script>
-    // Global state
-    const state = {
-      expenses: JSON.parse(localStorage.getItem('expenses')) || [],
+    // =========================
+    // Utilities & State
+    // =========================
+    const STORAGE_KEY = 'expenses_pro_v1';
+    const THEME_KEY = 'theme_pref_v1';
+    const CATEGORY_KEY = 'categories_v2';
+    const PAYMENT_METHOD_KEY = 'payment_methods_v1';
+
+    const el = id => document.getElementById(id);
+    const fmtEUR = n => (Number(n)||0).toLocaleString('el-GR', {style:'currency', currency:'EUR'});
+    const isMobile = () => window.innerWidth < 1024; // Use lg breakpoint for mobile detection
+
+    let state = {
+      expenses: [],
+      currentViewDate: new Date(),
+      filterCategory: '',
+      statusFilter: '',
       search: '',
-      statusFilter: 'all',
-      sort: 'dueDateAsc',
-      isDarkMode: localStorage.getItem('darkMode') === 'true'
+      sort: 'dueDateAsc'
     };
-
-    // Helper functions
-    const el = (id) => document.getElementById(id);
-    const formatDate = (date) => date.toISOString().split('T')[0];
-    const fromYMD = (s) => s? new Date(s+'T00:00:00'): null;
-    const toYMD = (d) => d? d.toISOString().split('T')[0]: null;
-
-    // Correct date handling to avoid timezone issues
-    function fromYMD_safe(s) {
-        if (!s) return null;
-        const parts = s.split('-');
-        return new Date(parts[0], parts[1] - 1, parts[2]);
-    }
     
+    // Default categories, used if localStorage is empty
+    const defaultCategories = [
+      { id:'home', label:'🏠 Σπίτι', icon:'🏠' },
+      { id:'transport', label:'🚗 Μεταφορά', icon:'🚗' },
+      { id:'entertainment', label:'🎬 Ψυχαγωγία', icon:'🎬' },
+      { id:'utilities', label:'⚡ Λογαριασμοί', icon:'⚡' },
+      { id:'food', label:'🍔 Φαγητό', icon:'🍔' },
+      { id:'health', label:'🩺 Υγεία', icon:'🩺' },
+      { id:'education', label:'📚 Εκπαίδευση', icon:'📚' },
+      { id:'other', label:'🗂️ Άλλα', icon:'🗂️' }
+    ];
+    
+    // Default payment methods
+    const defaultPaymentMethods = [
+        { id: 'cash', label: 'Μετρητά' },
+        { id: 'card', label: 'Κάρτα' },
+        { id: 'bank_transfer', label: 'Τραπεζική Μεταφορά' }
+    ];
+
+    // Seed demo data and migrate if needed
+    function seedIfEmpty() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        state.expenses = [
+          mkExpense('Ενοίκιο', 650, 'home', addDays(new Date(), 10), false, 'Μηνιαία υποχρέωση', 1),
+          mkExpense('ΔΕΗ', 85.45, 'utilities', addDays(new Date(), 3), false, 'Τελευταία ειδοποίηση', 0),
+          mkExpense('Internet', 30, 'utilities', addDays(new Date(), 5), false, 'Πληρώθηκε μέσω e-banking', 1),
+          mkExpense('Super Market', 120.90, 'food', addDays(new Date(), 2), false, '', 0),
+          mkExpense('Κινητό', 17.50, 'utilities', addDays(new Date(), 18), false, '', 0),
+        ];
+        persist();
+      } else {
+        try { 
+            state.expenses = JSON.parse(saved); 
+            // Migrate old data model if needed
+            state.expenses.forEach(exp => {
+                // Check for old boolean 'paid' field and no payments array
+                if (typeof exp.paid !== 'undefined' && !exp.payments) {
+                    exp.payments = [];
+                    if (exp.paid) {
+                        const paymentDate = exp.paymentDates?.[0] || exp.createdAt.split('T')[0];
+                        exp.payments.push({
+                            amount: exp.amount,
+                            date: paymentDate,
+                            method: 'migration',
+                            notes: 'Αρχική πληρωμή (μετανάστευση δεδομένων)',
+                            transactionNumber: ''
+                        });
+                    }
+                    delete exp.paid;
+                    delete exp.paymentDates;
+                }
+            });
+        } catch { state.expenses = []; }
+      }
+      const catSaved = localStorage.getItem(CATEGORY_KEY);
+      if (!catSaved) localStorage.setItem(CATEGORY_KEY, JSON.stringify(defaultCategories));
+      const payMethodSaved = localStorage.getItem(PAYMENT_METHOD_KEY);
+      if (!payMethodSaved) localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(defaultPaymentMethods));
+    }
+
+    function mkExpense(title, amount, category, dueDate, paid=false, notes='', repeatInterval=0) {
+      return {
+        id: crypto.randomUUID(),
+        title: String(title).trim(),
+        amount: Number(amount)||0,
+        category: category || 'other',
+        dueDate: toYMD(dueDate),
+        notes: String(notes||''),
+        repeatInterval: Number(repeatInterval) || 0,
+        createdAt: new Date().toISOString(),
+        payments: []
+      };
+    }
+
+    function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.expenses)); }
+    function persistCategories(){ localStorage.setItem(CATEGORY_KEY, JSON.stringify(getCategories())); }
+    function persistPaymentMethods(){ localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(getPaymentMethods())); }
+
     function addMonths(date, months) {
-        const d = new Date(date);
-        const originalDay = d.getDate();
-        d.setDate(1); // Set to day 1 to avoid month overflow issues
-        d.setMonth(d.getMonth() + months);
-        const lastDayOfNewMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-        d.setDate(Math.min(originalDay, lastDayOfNewMonth));
-        return d;
+    let d = new Date(date);
+    let newMonth = d.getMonth() + months;
+    let yearsToAdd = Math.floor(newMonth / 12);
+    let finalMonth = newMonth % 12;
+    
+    if (finalMonth < 0) {
+        finalMonth += 12;
+        yearsToAdd -= 1;
+    }
+    
+    d.setFullYear(d.getFullYear() + yearsToAdd);
+    d.setMonth(finalMonth);
+    
+    return d;
+}
+
+
+    function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+    function toYMD(d){ if(!d) return ''; const dt=new Date(d); const y=dt.getFullYear(); const m=String(dt.getMonth()+1).padStart(2,'0'); const day=String(dt.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+    function fromYMD(s){ return s? new Date(s+'T00:00:00'): null; }
+    
+    // Simple notification system
+    function notify(msg, type='info'){
+      const colors = {
+        info:'bg-gray-900 text-white',
+        success:'bg-green-600 text-white',
+        error:'bg-red-600 text-white',
+        warn:'bg-yellow-500 text-black'
+      };
+      const n = document.createElement('div');
+      n.className = `notification ${colors[type]||colors.info} px-4 py-2 rounded shadow-lg`;
+      n.textContent = msg;
+      el('notifications').appendChild(n);
+      setTimeout(()=>{ n.remove(); }, 2500);
+    }
+    
+    // Confirmation dialog
+    function showConfirmation(message, onConfirm) {
+      const dialog = el('confirmation-dialog');
+      el('confirmation-text').textContent = message;
+
+      // Set up event listeners for the buttons
+      const okBtn = el('confirm-ok');
+      const cancelBtn = el('confirm-cancel');
+
+      // We use .onclick to prevent multiple event listeners from stacking up
+      okBtn.onclick = () => {
+        dialog.close();
+        onConfirm();
+      };
+      cancelBtn.onclick = () => {
+        dialog.close();
+      };
+      
+      // Show the dialog as a modal, blocking other interactions
+      dialog.showModal();
     }
 
-    const mkId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-    const mkExpense = (title, amount, category, dueDate, isPaid, notes, repeatInterval, history = []) => ({
-      id: mkId(),
-      title,
-      amount: parseFloat(amount),
-      category,
-      dueDate: toYMD(dueDate),
-      isPaid,
-      notes,
-      repeatInterval: parseInt(repeatInterval, 10),
-      history
-    });
 
-    // CRUD operations
-    const saveState = () => {
-      localStorage.setItem('expenses', JSON.stringify(state.expenses));
-      renderList();
-      updateTotal();
-    };
+    // =========================
+    // Theme
+    // =========================
+    function applyStoredTheme(){
+      const pref = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light');
+      document.documentElement.classList.toggle('dark', pref==='dark');
+      el('themeIcon').textContent = pref==='dark'?'☀️':'🌙';
+    }
+    function toggleTheme(){
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem(THEME_KEY, isDark?'dark':'light');
+      el('themeIcon').textContent = isDark?'☀️':'🌙';
+    }
 
-    const addExpense = (expense) => {
-      state.expenses.unshift(expense);
-      saveState();
-    };
-
-    const editExpense = (id, newExp) => {
-      const index = state.expenses.findIndex(exp => exp.id === id);
-      if (index !== -1) {
-        state.expenses[index] = { ...state.expenses[index], ...newExp };
-        saveState();
-      }
-    };
-
-    const deleteExpense = (id) => {
-      if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το έξοδο;')) {
-        state.expenses = state.expenses.filter(exp => exp.id !== id);
-        saveState();
-      }
-    };
-    
-    const payExpense = (id, payDate) => {
-      const expense = state.expenses.find(exp => exp.id === id);
-      if (expense) {
-        // Record payment in history
-        expense.history.push({ date: payDate, amount: expense.amount });
-        
-        // If paid and has a repeat interval, create a new one
-        if (expense.repeatInterval > 0) {
-          // Fix: Use the paid date to calculate the next due date
-          const nextDueDate = addMonths(fromYMD_safe(payDate), expense.repeatInterval);
-          const newExp = mkExpense(expense.title, expense.amount, expense.category, nextDueDate, false, expense.notes, expense.repeatInterval, []);
-          state.expenses.unshift(newExp);
-        }
-
-        // Remove the original expense
-        state.expenses = state.expenses.filter(exp => exp.id !== id);
-
-        saveState();
-      }
-    };
-    
+    // =========================
     // Rendering
-    const renderList = () => {
-      let filtered = state.expenses.filter(exp => {
-        const matchesSearch = exp.title.toLowerCase().includes(state.search.toLowerCase());
-        const isPaid = exp.history.length > 0;
-        const matchesStatus = state.statusFilter === 'all' || (state.statusFilter === 'due' && !isPaid) || (state.statusFilter === 'paid' && isPaid);
-        return matchesSearch && matchesStatus;
+    // =========================
+    function renderHeader(){
+      const currentMonth = state.currentViewDate.toLocaleDateString('el-GR', { month: 'long', year: 'numeric' });
+      el('currentMonth').textContent = `${currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1)}`;
+      el('year').textContent = new Date().getFullYear();
+    }
+    
+    function changeMonth(offset) {
+        state.currentViewDate.setMonth(state.currentViewDate.getMonth() + offset);
+        renderAll();
+    }
+
+    function getCategories(){ try { return JSON.parse(localStorage.getItem(CATEGORY_KEY))||defaultCategories; } catch { return defaultCategories; } }
+    function getPaymentMethods(){ try { return JSON.parse(localStorage.getItem(PAYMENT_METHOD_KEY))||defaultPaymentMethods; } catch { return defaultPaymentMethods; } }
+
+    function renderFilters(){
+      const cats = [{ id: '', label: 'Όλες οι Κατηγορίες', icon: '' }, ...getCategories()];
+      const wrap = document.getElementById('categoryFilters');
+      wrap.innerHTML = '';
+      // Render filter buttons
+      cats.forEach(c=>{
+        const btn = document.createElement('button');
+        btn.className = `px-3 py-1 rounded-full text-sm transition-colors ${state.filterCategory===c.id ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`;
+        btn.textContent = c.label;
+        btn.addEventListener('click', ()=>{ state.filterCategory=c.id; renderAll(); });
+        wrap.appendChild(btn);
       });
-
-      filtered.sort((a, b) => {
-        if (state.sort === 'dueDateAsc') return new Date(a.dueDate) - new Date(b.dueDate);
-        if (state.sort === 'dueDateDesc') return new Date(b.dueDate) - new Date(a.dueDate);
-        if (state.sort === 'amountAsc') return a.amount - b.amount;
-        if (state.sort === 'amountDesc') return b.amount - a.amount;
-        return 0;
+      // Render select options for add dialog
+      const categorySelect = el('categoryInput');
+      categorySelect.innerHTML = '';
+      getCategories().forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.id;
+        option.textContent = c.label;
+        categorySelect.appendChild(option);
       });
+    }
+    
+    function renderPaymentMethods() {
+        const select = el('payMethod');
+        select.innerHTML = '';
+        getPaymentMethods().forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = m.label;
+            select.appendChild(option);
+        });
+    }
+    
+    function getFilteredExpenses() {
+        const year = state.currentViewDate.getFullYear();
+        const month = state.currentViewDate.getMonth();
+        return state.expenses.filter(x => {
+            const expenseDate = fromYMD(x.dueDate);
+            return expenseDate && expenseDate.getFullYear() === year && expenseDate.getMonth() === month;
+        });
+    }
 
-      const listContainer = el('expenseList');
-      listContainer.innerHTML = '';
+    function applyFilters(expenses){
+      let items = [...expenses];
+      if (state.filterCategory) items = items.filter(x=> x.category===state.filterCategory);
+      if (state.statusFilter==='paid') items = items.filter(x=> x.payments && x.payments.length > 0);
+      if (state.statusFilter==='unpaid') items = items.filter(x=> !x.payments || x.payments.length === 0);
+      if (state.search){
+        const q = state.search.toLowerCase();
+        items = items.filter(x=> x.title.toLowerCase().includes(q) || (x.notes||'').toLowerCase().includes(q));
+      }
+      switch(state.sort){
+        case 'dueDateAsc': items.sort((a,b)=> (a.dueDate||'').localeCompare(b.dueDate||'')); break;
+        case 'dueDateDesc': items.sort((a,b)=> (b.dueDate||'').localeCompare(a.dueDate||'')); break;
+        case 'amountDesc': items.sort((a,b)=> b.amount - a.amount); break;
+        case 'amountAsc': items.sort((a,b)=> a.amount - b.amount); break;
+        case 'titleAsc': items.sort((a,b)=> a.title.localeCompare(b.title)); break;
+      }
+      return items;
+    }
 
-      if (filtered.length === 0) {
-        listContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 mt-8">Δεν βρέθηκαν έξοδα.</p>';
+    function renderStats(){
+      const monthlyExpenses = getFilteredExpenses();
+      const total = monthlyExpenses.length;
+      const paid = monthlyExpenses.filter(x => x.payments && x.payments.length > 0).length;
+      const unpaid = total - paid;
+      const sum = monthlyExpenses.reduce((acc,x)=> acc + (Number(x.amount)||0), 0);
+      el('totalExpensesCount').textContent = String(total);
+      el('paidCount').textContent = String(paid);
+      el('unpaidCount').textContent = String(unpaid);
+      el('totalAmount').textContent = fmtEUR(sum);
+    }
+
+    function renderReminders(){
+      const holder = el('upcomingReminders');
+      holder.innerHTML = '';
+      
+      const unpaid = state.expenses
+        .filter(x => !x.payments || x.payments.length === 0)
+        .sort((a,b) => (a.dueDate||'').localeCompare(b.dueDate||''));
+        
+      if (!unpaid.length){
+        holder.innerHTML = `<div class="text-gray-500">Δεν υπάρχουν ανεξόφλητα έξοδα.</div>`;
+        return;
+      }
+      
+      unpaid.forEach(x => {
+        const d = new Date(x.dueDate).toLocaleDateString('el-GR');
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2";
+        row.innerHTML = `
+          <div class="text-sm"><span class="font-semibold">${x.title}</span> — <span class="opacity-80">${d}</span></div>
+          <div class="font-bold">${fmtEUR(x.amount)}</div>
+        `;
+        holder.appendChild(row);
+      });
+    }
+
+    function renderList(){
+      const list = el('expenseList');
+      list.innerHTML = '';
+      const monthlyExpenses = getFilteredExpenses();
+      const filtered = applyFilters(monthlyExpenses);
+      const getCategoryLabel = (id) => {
+        const cat = getCategories().find(c => c.id === id);
+        return cat ? (isMobile() ? cat.icon : cat.label) : id;
+      };
+
+      if (!filtered.length){
+        list.innerHTML = `<li class="p-6 text-center text-gray-500">Δεν βρέθηκαν έξοδα που να ταιριάζουν με τα φίλτρα.</li>`;
         return;
       }
 
-      filtered.forEach(exp => {
-        const isPaid = exp.history.length > 0;
-        const isDue = !isPaid && new Date(exp.dueDate) < new Date();
-        const cardClass = isPaid ? 'bg-green-100 dark:bg-green-800' : isDue ? 'bg-red-100 dark:bg-red-800' : 'bg-white dark:bg-gray-800';
-        const buttonColorClass = isPaid ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-blue-600';
+      filtered.forEach(x=>{
+        const li = document.createElement('li');
+        li.dataset.id = x.id;
+        li.className = "group relative transition-all";
+        const isPaid = x.payments && x.payments.length > 0;
+        const paidClass = isPaid ? 'line-through opacity-60' : '';
         
-        const expenseElement = document.createElement('div');
-        expenseElement.id = `exp-${exp.id}`;
-        expenseElement.className = `${cardClass} p-4 rounded-lg shadow-md mb-3 flex items-start justify-between transition-transform transform hover:scale-[1.01] duration-150 ease-in-out cursor-grab`;
-        expenseElement.setAttribute('data-id', exp.id);
-        
-        expenseElement.innerHTML = `
-          <div class="flex-grow">
-            <h3 class="text-xl font-bold">${exp.title}</h3>
-            <p class="text-lg font-semibold text-primary mt-1">${exp.amount.toFixed(2)}€</p>
-            <p class="text-sm mt-1 text-gray-600 dark:text-gray-400">Λήξη: ${exp.dueDate ? new Date(exp.dueDate + 'T00:00:00').toLocaleDateString('el-GR') : 'N/A'}</p>
-            ${exp.category !== 'none' ? `<span class="inline-block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-2 py-1 rounded-full mt-2">${exp.category}</span>` : ''}
+        li.innerHTML = `
+        <div class="absolute inset-y-0 -left-6 flex items-center justify-center w-6">
+            <div class="drag-handle w-4 h-4 rounded-full bg-gray-400 dark:bg-gray-600"></div>
+        </div>
+
+        <div class="lg:hidden flex flex-col gap-2 p-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <button class="toggle-status-btn" data-id="${x.id}" aria-label="Εναλλαγή κατάστασης πληρωμής">
+                        <div class="w-6 h-6 rounded-full border-2 border-current ${isPaid ? 'bg-green-500 border-green-500' : ''}"></div>
+                    </button>
+                    <div class="font-medium ${paidClass}">${x.title}</div>
+                </div>
+                <div class="font-bold text-lg ${paidClass}">${fmtEUR(x.amount)}</div>
+            </div>
+            <div class="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                <div class="flex items-center gap-2">
+                    <span>${getCategoryLabel(x.category)}</span>
+                    <span class="text-xs font-semibold uppercase rounded-full px-2 py-1 ${isPaid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${isPaid ? 'ΠΛΗΡΩΜΕΝΟ' : 'ΑΝΕΞΟΦΛΗΤΟ'}</span>
+                </div>
+                <div>${new Date(x.dueDate).toLocaleDateString('el-GR')}</div>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <button class="edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Επεξεργασία">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13.5l-5 5v3h3l5-5-3-3zM16 5l-4.5 4.5M19 8l-4.5-4.5"></path></svg>
+                </button>
+                ${isPaid ?
+                `<button class="history-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Ιστορικό Πληρωμών">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </button>` :
+                `<button class="pay-btn p-2 rounded-full bg-green-500 text-white hover:bg-green-600" data-id="${x.id}" title="Καταγραφή Πληρωμής">
+                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0v5m-5-5a4 4 0 100 8h2m6-8a4 4 0 110 8h2m-6-4h4m-5 4h8a2 2 0 002-2v-2a2 2 0 00-2-2h-8a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
+                </button>`
+                }
+                <button class="delete-btn p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-700" data-id="${x.id}" title="Διαγραφή">
+                  <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="hidden lg:grid grid-cols-[32px_1fr_110px_130px_120px_100px_140px] items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer">
+          <button class="toggle-status-btn" data-id="${x.id}" aria-label="Εναλλαγή κατάστασης πληρωμής">
+            <div class="w-6 h-6 rounded-full border-2 border-current ${isPaid ? 'bg-green-500 border-green-500' : ''}"></div>
+          </button>
+          <div class="space-y-1">
+            <div class="font-medium ${paidClass}">${x.title}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 overflow-hidden text-ellipsis whitespace-nowrap">${x.notes}</div>
           </div>
-          <div class="flex flex-col space-y-2 no-print">
-            <button class="pay-btn px-3 py-1 text-white rounded-md text-sm font-medium transition-colors duration-200 ${buttonColorClass}">
-              ${isPaid ? 'Πληρώθηκε' : 'Πληρωμή'}
+          <div class="font-semibold text-right ${paidClass}">${fmtEUR(x.amount)}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 ${paidClass}">${getCategoryLabel(x.category)}</div>
+          <div class="text-sm font-light ${paidClass}">${new Date(x.dueDate).toLocaleDateString('el-GR')}</div>
+          <div class="text-xs text-center font-semibold uppercase rounded-full px-2 py-1 ${paidClass} ${isPaid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+            ${isPaid ? 'ΠΛΗΡΩΜΕΝΟ' : 'ΑΝΕΞΟΦΛΗΤΟ'}
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Επεξεργασία">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13.5l-5 5v3h3l5-5-3-3zM16 5l-4.5 4.5M19 8l-4.5-4.5"></path></svg>
             </button>
-            <button class="edit-btn px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-              Επεξεργασία
-            </button>
-            ${isPaid ? `
-              <button class="history-btn px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
-                Ιστορικό
-              </button>
-            ` : ''}
-            <button class="delete-btn px-3 py-1 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600 transition-colors duration-200">
-              Διαγραφή
+            ${isPaid ?
+            `<button class="history-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Ιστορικό Πληρωμών">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </button>` :
+            `<button class="pay-btn px-3 py-1 rounded-lg bg-green-500 text-white hover:bg-green-600" data-id="${x.id}" title="Καταγραφή Πληρωμής">
+              <svg class="w-4 h-4 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6m-5 0v5m-5-5a4 4 0 100 8h2m6-8a4 4 0 110 8h2m-6-4h4m-5 4h8a2 2 0 002-2v-2a2 2 0 00-2-2h-8a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
+               Πληρωμή
+            </button>`
+            }
+            <button class="delete-btn p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-700" data-id="${x.id}" title="Διαγραφή">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
           </div>
+        </div>
         `;
-        listContainer.appendChild(expenseElement);
+        list.appendChild(li);
       });
-      
-      new Sortable(listContainer, {
-          animation: 150,
-          onEnd: (evt) => {
-              const itemEl = evt.item; // dragged HTMLElement
-              const oldIndex = evt.oldIndex;
-              const newIndex = evt.newIndex;
-              
-              if (oldIndex !== newIndex) {
-                  const expenseId = itemEl.getAttribute('data-id');
-                  const movedExpense = state.expenses.find(exp => exp.id === expenseId);
-                  state.expenses.splice(oldIndex, 1);
-                  state.expenses.splice(newIndex, 0, movedExpense);
-                  saveState();
-              }
-          }
-      });
-    };
 
-    const updateTotal = () => {
-      const total = state.expenses.filter(exp => exp.history.length === 0).reduce((sum, exp) => sum + exp.amount, 0);
-      el('totalAmount').textContent = total.toFixed(2) + '€';
-    };
-    
-    // Modal management
-    const showModal = (modalId) => {
-      const modal = el(modalId);
-      modal.classList.remove('hidden');
-    };
-    const hideModal = (modalId) => {
-      const modal = el(modalId);
-      modal.classList.add('hidden');
-    };
-    
-    const openAddDialog = () => {
-      el('modalTitle').textContent = 'Νέο Έξοδο';
-      el('expenseId').value = '';
-      el('title').value = '';
-      el('amount').value = '';
-      el('category').value = 'none';
-      el('dueDate').value = toYMD(new Date());
-      el('repeatInterval').value = 0;
-      el('notes').value = '';
-      showModal('expenseModal');
-    };
-    
-    const openEditDialog = (id) => {
-      const expense = state.expenses.find(exp => exp.id === id);
-      if (expense) {
-        el('modalTitle').textContent = 'Επεξεργασία Εξόδου';
-        el('expenseId').value = expense.id;
-        el('title').value = expense.title;
-        el('amount').value = expense.amount;
-        el('category').value = expense.category;
-        el('dueDate').value = expense.dueDate;
-        el('repeatInterval').value = expense.repeatInterval;
-        el('notes').value = expense.notes;
-        showModal('expenseModal');
-      }
-    };
-    
-    const openPayDialog = (id) => {
-      const expense = state.expenses.find(exp => exp.id === id);
-      if (expense) {
-        el('payExpenseId').value = expense.id;
-        el('payDate').value = toYMD(new Date());
-        showModal('payModal');
-      }
-    };
-    
-    const showPaymentHistory = (id) => {
-        const expense = state.expenses.find(exp => exp.id === id);
-        if (expense && expense.history.length > 0) {
-            const historyList = el('historyList');
-            historyList.innerHTML = '';
-            expense.history.forEach(item => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'p-3 mb-2 bg-gray-100 dark:bg-gray-700 rounded-md';
-                historyItem.innerHTML = `
-                    <p class="text-sm">Πληρωμή: ${new Date(item.date).toLocaleDateString('el-GR')}</p>
-                    <p class="font-semibold">${item.amount.toFixed(2)}€</p>
-                `;
-                historyList.appendChild(historyItem);
-            });
-            showModal('historyModal');
-        } else {
-            alert('Δεν υπάρχει ιστορικό πληρωμών για αυτό το έξοδο.');
+      // Initialize Sortable.js
+      new Sortable(list, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: (evt) => {
+          const itemEl = evt.item;
+          const oldIndex = evt.oldIndex;
+          const newIndex = evt.newIndex;
+          const item = filtered.find(x => x.id === itemEl.dataset.id);
+          
+          if(oldIndex !== newIndex) {
+            const reorderedItems = applyFilters(getFilteredExpenses());
+            const movedItem = reorderedItems.splice(oldIndex, 1)[0];
+            reorderedItems.splice(newIndex, 0, movedItem);
+            
+            const newExpenseOrder = reorderedItems.map(item => item.id);
+            state.expenses.sort((a,b) => newExpenseOrder.indexOf(a.id) - newExpenseOrder.indexOf(b.id));
+
+            persist();
+          }
         }
-    };
+      });
+    }
 
-    // Dark Mode
-    const toggleDarkMode = () => {
-      state.isDarkMode = !state.isDarkMode;
-      localStorage.setItem('darkMode', state.isDarkMode);
-      updateDarkModeClass();
-    };
-
-    const updateDarkModeClass = () => {
-      if (state.isDarkMode) {
-        document.documentElement.classList.add('dark');
-        el('darkModeText').textContent = 'Φωτεινή Λειτουργία';
-      } else {
-        document.documentElement.classList.remove('dark');
-        el('darkModeText').textContent = 'Σκοτεινή Λειτουργία';
-      }
-    };
-
-    // Export/Import
-    const exportData = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.expenses, null, 2));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", "μηνιαία-έξοδα.json");
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-    };
-
-    const importData = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'application/json';
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const importedExpenses = JSON.parse(event.target.result);
-            state.expenses = importedExpenses;
-            saveState();
-            alert('Τα δεδομένα εισήχθησαν με επιτυχία!');
-          } catch (error) {
-            alert('Σφάλμα κατά την εισαγωγή δεδομένων. Βεβαιωθείτε ότι το αρχείο είναι έγκυρο.');
-          }
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    };
-    
-    // Print
-    const printList = () => {
-        window.print();
-    };
-
-    // Event listeners
-    document.addEventListener('DOMContentLoaded', () => {
-      updateDarkModeClass();
+    function renderAll(){
+      renderHeader();
+      renderFilters();
+      renderPaymentMethods();
+      renderStats();
+      renderReminders();
       renderList();
-      updateTotal();
-      
-      // Global click listener for modals
-      window.addEventListener('click', (event) => {
-        if (event.target === el('expenseModal')) hideModal('expenseModal');
-        if (event.target === el('payModal')) hideModal('payModal');
-        if (event.target === el('historyModal')) hideModal('historyModal');
-        if (event.target === el('aboutModal')) hideModal('aboutModal');
-      });
-      
-      el('addExpenseBtn').addEventListener('click', openAddDialog);
-      el('cancelExpenseBtn').addEventListener('click', () => hideModal('expenseModal'));
-      el('cancelPayBtn').addEventListener('click', () => hideModal('payModal'));
-      el('closeHistoryBtn').addEventListener('click', () => hideModal('historyModal'));
-      el('closeAboutBtn').addEventListener('click', () => hideModal('aboutModal'));
-      
-      // Menu functionality
-      const menuBtn = el('menuBtn');
-      const menuContent = el('menuContent');
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menuContent.classList.toggle('hidden');
-      });
-      document.addEventListener('click', (e) => {
-        if (!menuContent.contains(e.target) && e.target !== menuBtn) {
-          menuContent.classList.add('hidden');
-        }
-      });
-      
-      el('darkModeBtn').addEventListener('click', toggleDarkMode);
-      el('exportBtn').addEventListener('click', exportData);
-      el('importBtn').addEventListener('click', importData);
-      el('printBtn').addEventListener('click', printList);
-      el('aboutBtn').addEventListener('click', () => { hideModal('expenseModal'); hideModal('payModal'); showModal('aboutModal'); });
+    }
 
-      el('expenseForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = el('expenseId').value;
-        const newExpense = {
-          title: el('title').value,
-          amount: el('amount').value,
-          category: el('category').value,
-          dueDate: el('dueDate').value,
-          notes: el('notes').value,
-          repeatInterval: el('repeatInterval').value
-        };
-        
-        if (id) {
-          editExpense(id, newExpense);
-        } else {
-          addExpense(mkExpense(newExpense.title, newExpense.amount, newExpense.category, fromYMD(newExpense.dueDate), false, newExpense.notes, newExpense.repeatInterval));
-        }
-        hideModal('expenseModal');
+    // =========================
+    // Actions
+    // =========================
+    function getExpenseById(id){ return state.expenses.find(x => x.id === id); }
+    function deleteExpense(id){
+      const exp = getExpenseById(id);
+      showConfirmation(`Είστε σίγουροι ότι θέλετε να διαγράψετε το έξοδο "${exp.title}"; Αυτή η ενέργεια δεν αναστρέφεται.`, () => {
+        state.expenses = state.expenses.filter(x=>x.id!==id);
+        persist();
+        renderAll();
+        notify('Το έξοδο διαγράφηκε.', 'success');
       });
+    }
+
+    function handleStatusClick(id) {
+        const exp = getExpenseById(id);
+        if (!exp) return;
+        if (exp.payments && exp.payments.length > 0) {
+            showPaymentHistory(id);
+        } else {
+            openPayDialog(id);
+        }
+    }
+    
+    function openAddDialog(id){
+      const dialog = el('addDialog');
+      const form = el('addForm');
+      const expense = id ? getExpenseById(id) : null;
       
-      el('payForm').addEventListener('submit', (e) => {
+      form.reset();
+      el('expenseId').value = id || '';
+      
+      if(expense){
+        el('titleInput').value = expense.title;
+        el('amountInput').value = expense.amount;
+        el('categoryInput').value = expense.category;
+        el('dueDateInput').value = expense.dueDate;
+        el('repeatInput').value = expense.repeatInterval;
+        el('notesInput').value = expense.notes;
+      } else {
+        // Set default due date to the last day of the current view month
+        const lastDayOfMonth = new Date(state.currentViewDate.getFullYear(), state.currentViewDate.getMonth() + 1, 0);
+        el('dueDateInput').value = toYMD(lastDayOfMonth);
+      }
+      dialog.showModal();
+    }
+    
+    function saveExpense(e){
+      e.preventDefault();
+      const id = el('expenseId').value;
+      const title = el('titleInput').value;
+      const amount = el('amountInput').value;
+      const category = el('categoryInput').value;
+      const dueDate = el('dueDateInput').value;
+      const repeatInterval = el('repeatInput').value;
+      const notes = el('notesInput').value;
+      
+      if(id){
+        const exp = getExpenseById(id);
+        if(exp){
+          Object.assign(exp, { title, amount, category, dueDate, notes, repeatInterval });
+          notify('Το έξοδο ενημερώθηκε!', 'success');
+        }
+      } else {
+        const newExp = mkExpense(title, amount, category, dueDate, false, notes, repeatInterval);
+        state.expenses.unshift(newExp);
+        notify('Το έξοδο προστέθηκε!', 'success');
+      }
+      
+      persist();
+      renderAll();
+      el('addDialog').close();
+    }
+
+    function openPayDialog(id){
+      const dialog = el('payDialog');
+      const expense = getExpenseById(id);
+      if(!expense) return;
+      
+      el('payExpenseId').value = id;
+      el('payAmount').value = expense.amount;
+      el('payDate').value = toYMD(new Date());
+      el('payNotes').value = '';
+      el('payTransactionNumber').value = '';
+
+      renderPaymentMethods();
+      dialog.showModal();
+    }
+    
+    function handlePayment(e){
         e.preventDefault();
         const id = el('payExpenseId').value;
-        const payDate = el('payDate').value;
-        payExpense(id, payDate);
-        hideModal('payModal');
+        const exp = getExpenseById(id);
+        if (!exp) return;
+
+        const newPayment = {
+            amount: Number(el('payAmount').value) || 0,
+            date: el('payDate').value,
+            method: el('payMethod').value,
+            notes: el('payNotes').value,
+            transactionNumber: el('payTransactionNumber').value
+        };
+
+        if (!exp.payments) exp.payments = [];
+        exp.payments.push(newPayment);
+
+        // If paid and has a repeat interval, create a new one
+        if (exp.repeatInterval > 0) {
+            const nextDueDate = addMonths(fromYMD(exp.dueDate), exp.repeatInterval);
+            const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval);
+            state.expenses.unshift(newExp);
+        }
+        
+        persist();
+        renderAll();
+        notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
+        el('payDialog').close();
+    }
+
+    function openBulkDialog() {
+        renderBulkList();
+        el('bulkDialog').showModal();
+    }
+    
+    function renderBulkList() {
+        const bulkList = el('bulkList');
+        bulkList.innerHTML = '';
+        const monthlyExpenses = applyFilters(getFilteredExpenses());
+
+        if (monthlyExpenses.length === 0) {
+            bulkList.innerHTML = `<p class="p-4 text-center text-gray-500">Δεν υπάρχουν έξοδα για αυτόν τον μήνα.</p>`;
+            return;
+        }
+
+        monthlyExpenses.forEach(exp => {
+            const isPaid = exp.payments && exp.payments.length > 0;
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors';
+            item.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" class="h-5 w-5 rounded form-checkbox text-green-600 focus:ring-green-500 dark:bg-gray-700 dark:border-gray-600" data-id="${exp.id}" ${isPaid ? 'checked' : ''}>
+                    <div>
+                        <div class="font-medium">${exp.title}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${fmtEUR(exp.amount)} - ${new Date(exp.dueDate).toLocaleDateString('el-GR')}</div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    ${(exp.payments && exp.payments.length > 0) ? `Πληρωμένο` : `Ανεξόφλητο`}
+                </div>
+            `;
+            bulkList.appendChild(item);
+        });
+    }
+
+    function handleBulkSave() {
+        const checkboxes = el('bulkList').querySelectorAll('input[type="checkbox"]');
+        const now = toYMD(new Date());
+        
+        checkboxes.forEach(cb => {
+            const id = cb.dataset.id;
+            const exp = getExpenseById(id);
+            if (!exp) return;
+
+            const wasPaid = exp.payments && exp.payments.length > 0;
+            const isNowPaid = cb.checked;
+            
+            if (isNowPaid && !wasPaid) {
+                // Mark as paid
+                if (!exp.payments) exp.payments = [];
+                exp.payments.push({
+                    amount: exp.amount,
+                    date: now,
+                    method: 'bulk_update',
+                    notes: 'Καταχώρηση μέσω μαζικής ενημέρωσης',
+                    transactionNumber: ''
+                });
+            } else if (!isNowPaid && wasPaid) {
+                // Unmark as paid (undo last payment)
+                exp.payments.pop();
+            }
+        });
+
+        persist();
+        renderAll();
+        notify('Οι αλλαγές αποθηκεύτηκαν με επιτυχία!', 'success');
+        el('bulkDialog').close();
+    }
+
+
+    async function exportData(){
+        const data = JSON.stringify(state.expenses, null, 2);
+        const fileName = `expenses_export_${toYMD(new Date())}.json`;
+        
+        if ('showSaveFilePicker' in window) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(data);
+                await writable.close();
+                notify('Τα δεδομένα εξήχθησαν!', 'success');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error(err);
+                    notify('Αποτυχία εξαγωγής. Δοκιμάστε ξανά.', 'error');
+                }
+            }
+        } else {
+            // Fallback for browsers without showSaveFilePicker
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            notify('Τα δεδομένα εξήχθησαν! (Αποθηκεύτηκαν στο φάκελο Λήψεων)', 'success');
+        }
+    }
+
+    function importData(e){
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedExpenses = JSON.parse(event.target.result);
+          if (Array.isArray(importedExpenses) && importedExpenses.every(x => x.id && x.title)){
+            state.expenses = importedExpenses;
+            persist();
+            renderAll();
+            notify('Τα δεδομένα εισήχθησαν με επιτυχία!', 'success');
+          } else {
+            throw new Error('Invalid JSON format');
+          }
+        } catch (err){
+          notify('Αποτυχία εισαγωγής. Μη έγκυρο αρχείο JSON.', 'error');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function generatePDF(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("Μηνιαία Έξοδα Pro", 14, 20);
+      doc.setFont("Helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
+      
+      const tableData = applyFilters(getFilteredExpenses()).map(exp => [
+        exp.title,
+        fmtEUR(exp.amount),
+        getCategories().find(c => c.id === exp.category)?.label || exp.category,
+        new Date(exp.dueDate).toLocaleDateString('el-GR'),
+        (exp.payments && exp.payments.length > 0) ? 'Πληρωμένο' : 'Ανεξόφλητο'
+      ]);
+
+      doc.autoTable({
+        startY: 35,
+        head: [['Τίτλος', 'Ποσό', 'Κατηγορία', 'Ημ/νία Λήξης', 'Κατάσταση']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [93, 92, 222] }, // Primary color
+        styles: { font: 'Helvetica', fontSize: 10, cellPadding: 2 },
+        columnStyles: { 1: { halign: 'right' } }
       });
       
-      el('expenseList').addEventListener('click', (e) => {
-        const target = e.target;
-        const card = target.closest('[data-id]');
-        if (!card) return;
-        const id = card.getAttribute('data-id');
+      doc.save(`monthly_expenses_${toYMD(new Date())}.pdf`);
+      notify('Το PDF δημιουργήθηκε!', 'success');
+    }
+    
+    // =========================
+    // Category Management
+    // =========================
+    function openCategoryDialog() {
+        renderCategoryList();
+        el('categoryDialog').showModal();
+        el('categoryForm').reset();
+    }
+    
+    function renderCategoryList() {
+        const list = el('categoryList');
+        list.innerHTML = '';
+        const cats = getCategories();
+        
+        if (cats.length === 0) {
+            list.innerHTML = `<li class="py-2 text-center text-gray-500">Δεν υπάρχουν κατηγορίες.</li>`;
+            return;
+        }
+        
+        cats.forEach(c => {
+            const li = document.createElement('li');
+            li.className = "flex justify-between items-center py-2";
+            li.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">${c.icon}</span>
+                    <span>${c.label}</span>
+                </div>
+                <div class="space-x-2">
+                    <button class="edit-category-btn text-sm text-primary" data-id="${c.id}">Επεξεργασία</button>
+                    <button class="delete-category-btn text-sm text-red-600" data-id="${c.id}">Διαγραφή</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+    
+    function handleCategoryFormSubmit(e) {
+        e.preventDefault();
+        const id = el('categoryId').value || crypto.randomUUID();
+        const label = el('categoryLabel').value;
+        const icon = el('categoryIcon').value;
+        
+        let cats = getCategories();
+        const existingIndex = cats.findIndex(c => c.id === id);
+        
+        if (existingIndex !== -1) {
+            cats[existingIndex] = { id, label, icon };
+            notify('Η κατηγορία ενημερώθηκε!', 'success');
+        } else {
+            cats.push({ id, label, icon });
+            notify('Η κατηγορία προστέθηκε!', 'success');
+        }
+        
+        localStorage.setItem(CATEGORY_KEY, JSON.stringify(cats));
+        renderCategoryList();
+        renderFilters();
+        el('categoryForm').reset();
+    }
+    
+    function deleteCategory(id) {
+        const cats = getCategories();
+        const otherCategory = cats.find(c => c.id === 'other');
+        
+        if (id === 'other') {
+            notify('Δεν μπορείς να διαγράψεις την προεπιλεγμένη κατηγορία "Άλλα".', 'error');
+            return;
+        }
+        
+        if (!otherCategory) {
+            notify('Δεν βρέθηκε η κατηγορία "Άλλα". Η διαγραφή δεν είναι δυνατή.', 'error');
+            return;
+        }
 
-        if(target.classList.contains('edit-btn')) {
-          openEditDialog(id);
-        } else if(target.classList.contains('pay-btn') && confirm('Θέλετε να καταχωρίσετε την πληρωμή για αυτό το έξοδο;')) {
+        showConfirmation(`Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την κατηγορία; Όλα τα έξοδα που συνδέονται με αυτήν θα μεταφερθούν στην κατηγορία "Άλλα".`, () => {
+          // Reassign expenses to 'other' category
+          state.expenses.forEach(exp => {
+              if (exp.category === id) {
+                  exp.category = 'other';
+              }
+          });
+          
+          const updatedCats = cats.filter(c => c.id !== id);
+          
+          localStorage.setItem(CATEGORY_KEY, JSON.stringify(updatedCats));
+          persist(); // Persist the updated expenses
+          renderCategoryList();
+          renderFilters();
+          renderList();
+          notify('Η κατηγορία διαγράφηκε.', 'success');
+        });
+    }
+    
+    function editCategory(id) {
+        const cats = getCategories();
+        const category = cats.find(c => c.id === id);
+        if (category) {
+            el('categoryId').value = category.id;
+            el('categoryLabel').value = category.label;
+            el('categoryIcon').value = category.icon;
+            el('categoryForm').scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    // =========================
+    // Payment History & Undo
+    // =========================
+    function showPaymentHistory(id) {
+        const exp = getExpenseById(id);
+        const list = el('paymentHistoryList');
+        const undoBtn = el('undoPaymentBtn');
+        
+        list.innerHTML = '';
+        undoBtn.style.display = 'none';
+
+        if (!exp || !exp.payments || exp.payments.length === 0) {
+            list.innerHTML = `<div class="text-gray-500">Δεν υπάρχουν καταχωρημένες πληρωμές για αυτό το έξοδο.</div>`;
+        } else {
+            exp.payments.forEach(p => {
+                const method = getPaymentMethods().find(m => m.id === p.method)?.label || p.method;
+                const date = new Date(p.date).toLocaleDateString('el-GR');
+                const li = document.createElement('div');
+                li.className = 'py-3 px-4 rounded-lg bg-gray-100 dark:bg-gray-800 space-y-1';
+                li.innerHTML = `
+                    <div class="font-semibold">${fmtEUR(p.amount)}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                      <div>${date} - ${method}</div>
+                      ${p.transactionNumber ? `<div>Αρ. Συναλλαγής: ${p.transactionNumber}</div>` : ''}
+                      ${p.notes ? `<div>Σημειώσεις: ${p.notes}</div>` : ''}
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+            undoBtn.dataset.id = id;
+            undoBtn.style.display = 'block';
+        }
+        el('historyDialog').showModal();
+    }
+
+    function undoLastPayment(expenseId) {
+        const expense = getExpenseById(expenseId);
+        if (expense && expense.payments && expense.payments.length > 0) {
+            const lastPayment = expense.payments[expense.payments.length - 1];
+            showConfirmation(`Είστε σίγουροι ότι θέλετε να αναιρέσετε την τελευταία πληρωμή ύψους €${lastPayment.amount.toFixed(2)};`, () => {
+                expense.payments.pop();
+                persist();
+                renderAll();
+                showPaymentHistory(expenseId);
+                notify(`Αναιρέθηκε η πληρωμή €${lastPayment.amount.toFixed(2)} για το έξοδο "${expense.title}".`, 'success');
+            });
+        } else {
+            notify('Δεν υπάρχουν πληρωμές για αναίρεση σε αυτό το έξοδο.', 'error');
+        }
+    }
+    
+    function handleAddPayMethod() {
+      const newMethodLabel = prompt("Εισάγετε νέο τρόπο πληρωμής:");
+      if (newMethodLabel && newMethodLabel.trim()) {
+          const newMethodId = newMethodLabel.trim().toLowerCase().replace(/\s+/g, '_');
+          const methods = getPaymentMethods();
+          if (!methods.find(m => m.id === newMethodId)) {
+              methods.push({ id: newMethodId, label: newMethodLabel });
+              localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(methods));
+              renderPaymentMethods();
+              el('payMethod').value = newMethodId;
+              notify('Προστέθηκε νέος τρόπος πληρωμής!', 'success');
+          } else {
+              notify('Ο τρόπος πληρωμής υπάρχει ήδη.', 'warn');
+          }
+      }
+    }
+
+    // =========================
+    // Event Listeners
+    // =========================
+    document.addEventListener('DOMContentLoaded', () => {
+      seedIfEmpty();
+      applyStoredTheme();
+      renderAll();
+
+      el('themeToggle').addEventListener('click', toggleTheme);
+      el('prevMonthBtn').addEventListener('click', () => changeMonth(-1));
+      el('nextMonthBtn').addEventListener('click', () => changeMonth(1));
+      el('btnAdd').addEventListener('click', () => openAddDialog());
+      el('btnBulk').addEventListener('click', () => openBulkDialog());
+      el('btnExport').addEventListener('click', exportData);
+      el('btnImport').addEventListener('click', () => el('importInput').click());
+      el('btnPDF').addEventListener('click', generatePDF);
+      el('importInput').addEventListener('change', importData);
+      el('btnManageCategories').addEventListener('click', openCategoryDialog);
+
+      el('addForm').addEventListener('submit', saveExpense);
+      el('payForm').addEventListener('submit', handlePayment);
+      el('bulkSave').addEventListener('click', handleBulkSave);
+      el('categoryForm').addEventListener('submit', handleCategoryFormSubmit);
+      el('addPayMethod').addEventListener('click', handleAddPayMethod);
+      el('undoPaymentBtn').addEventListener('click', (e) => {
+          const expenseId = e.target.dataset.id;
+          if (expenseId) {
+              undoLastPayment(expenseId);
+          }
+      });
+      
+      el('categoryList').addEventListener('click', (e) => {
+          const target = e.target.closest('button');
+          if (!target) return;
+          const id = target.dataset.id;
+          if (target.classList.contains('edit-category-btn')) {
+              editCategory(id);
+          } else if (target.classList.contains('delete-category-btn')) {
+              deleteCategory(id);
+          }
+      });
+      el('addCategoryBtn').addEventListener('click', () => {
+          el('categoryForm').reset();
+          el('categoryId').value = '';
+          el('categoryLabel').focus();
+      });
+
+      el('expenseList').addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        const id = target.dataset.id;
+        if(target.classList.contains('toggle-status-btn')) {
+          handleStatusClick(id);
+        } else if(target.classList.contains('edit-btn')) {
+          openAddDialog(id);
+        } else if(target.classList.contains('pay-btn')) {
           openPayDialog(id);
         } else if(target.classList.contains('history-btn')) {
           showPaymentHistory(id);
@@ -619,23 +1274,6 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      el('installBtn').classList.remove('hidden');
-    });
-
-    el('installBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-            el('installBtn').classList.add('hidden');
-          } else {
-            console.log('User dismissed the install prompt');
-          }
-          deferredPrompt = null;
-        });
-      }
     });
   </script>
 </body>
