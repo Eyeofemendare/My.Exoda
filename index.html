@@ -402,23 +402,19 @@
     function persistCategories(){ localStorage.setItem(CATEGORY_KEY, JSON.stringify(getCategories())); }
     function persistPaymentMethods(){ localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(getPaymentMethods())); }
 
-    function addMonths(date, months) {
+function addMonths(date, months) {
     let d = new Date(date);
     let newMonth = d.getMonth() + months;
     let yearsToAdd = Math.floor(newMonth / 12);
     let finalMonth = newMonth % 12;
-    
     if (finalMonth < 0) {
         finalMonth += 12;
         yearsToAdd -= 1;
     }
-    
     d.setFullYear(d.getFullYear() + yearsToAdd);
     d.setMonth(finalMonth);
-    
     return d;
 }
-
 
     function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
     function toYMD(d){ if(!d) return ''; const dt=new Date(d); const y=dt.getFullYear(); const m=String(dt.getMonth()+1).padStart(2,'0'); const day=String(dt.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
@@ -813,36 +809,41 @@
       dialog.showModal();
     }
     
-    function handlePayment(e){
-        e.preventDefault();
-        const id = el('payExpenseId').value;
-        const exp = getExpenseById(id);
-        if (!exp) return;
+function handlePayment(e) {
+    e.preventDefault();
+    const id = elpayExpenseId.value;
+    const exp = getExpenseById(id);
+    if (!exp) return;
+    const newPayment = {
+        amount: Number(elpayAmount.value) || 0,
+        date: elpayDate.value,
+        method: elpayMethod.value,
+        notes: elpayNotes.value,
+        transactionNumber: elpayTransactionNumber.value,
+    };
+    if (!exp.payments) exp.payments = [];
+    exp.payments.push(newPayment);
 
-        const newPayment = {
-            amount: Number(el('payAmount').value) || 0,
-            date: el('payDate').value,
-            method: el('payMethod').value,
-            notes: el('payNotes').value,
-            transactionNumber: el('payTransactionNumber').value
-        };
-
-        if (!exp.payments) exp.payments = [];
-        exp.payments.push(newPayment);
-
-        // If paid and has a repeat interval, create a new one
-        if (exp.repeatInterval > 0) {
-            const nextDueDate = addMonths(fromYMD(exp.dueDate), exp.repeatInterval);
-            const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval);
-            state.expenses.unshift(newExp);
-        }
-        
-        persist();
-        renderAll();
-        notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
-        el('payDialog').close();
+    // ΔΙΟΡΘΩΣΗ: δημιουργία πραγματικά σωστού επαναλαμβανόμενου εξόδου
+    if (exp.repeatInterval > 0) {
+        const lastDueDate = fromYMD(exp.dueDate);
+        const nextDueDate = addMonths(lastDueDate, exp.repeatInterval);
+        const newExp = mkExpense(
+            exp.title,
+            exp.amount,
+            exp.category,
+            toYMD(nextDueDate),
+            false,
+            exp.notes,
+            exp.repeatInterval
+        );
+        state.expenses.unshift(newExp);
     }
-
+    persist();
+    renderAll();
+    notify("Η πληρωμή καταγράφηκε με επιτυχία!", "success");
+    elpayDialog.close();
+}
     function openBulkDialog() {
         renderBulkList();
         el('bulkDialog').showModal();
