@@ -403,19 +403,17 @@
     function persistPaymentMethods(){ localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(getPaymentMethods())); }
 
 function addMonths(dateString, months) {
-    // Δημιουργία αντικειμένου Date από string με σωστή μορφή (YYYY-MM-DD)
     let parts = dateString.split('-');
     let year = parseInt(parts[0], 10);
-    let month = parseInt(parts[1], 10) - 1; // 0-based μήνας
+    let month = parseInt(parts[1], 10) - 1;
     let day = parseInt(parts[2], 10);
 
     let d = new Date(year, month, day);
     d.setMonth(d.getMonth() + months);
 
-    // Επιστροφή ημερομηνίας σε μορφή YYYY-MM-DD
     let yyyy = d.getFullYear();
-    let mm = (d.getMonth() + 1).toString().padStart(2, '0');
-    let dd = d.getDate().toString().padStart(2, '0');
+    let mm = String(d.getMonth() + 1).padStart(2, '0');
+    let dd = String(d.getDate()).padStart(2, '0');
 
     return `${yyyy}-${mm}-${dd}`;
 }
@@ -818,6 +816,7 @@ function handlePayment(e) {
     const id = elpayExpenseId.value;
     const exp = getExpenseById(id);
     if (!exp) return;
+
     const newPayment = {
         amount: Number(elpayAmount.value) || 0,
         date: elpayDate.value,
@@ -825,29 +824,29 @@ function handlePayment(e) {
         notes: elpayNotes.value,
         transactionNumber: elpayTransactionNumber.value,
     };
+
     if (!exp.payments) exp.payments = [];
     exp.payments.push(newPayment);
 
-    // ΔΙΟΡΘΩΣΗ: δημιουργία πραγματικά σωστού επαναλαμβανόμενου εξόδου
     if (exp.repeatInterval > 0) {
-        const lastDueDate = fromYMD(exp.dueDate);
-        const nextDueDate = addMonths(lastDueDate, exp.repeatInterval);
+        // Τροποποίηση: Υπολογισμός επόμενης πληρωμής από ημερομηνία πληρωμής
+        const nextDueDate = addMonths(newPayment.date, exp.repeatInterval);
         const newExp = mkExpense(
             exp.title,
             exp.amount,
             exp.category,
-            toYMD(nextDueDate),
-            false,
-            exp.notes,
+            nextDueDate,
             exp.repeatInterval
         );
         state.expenses.unshift(newExp);
     }
+
     persist();
     renderAll();
     notify("Η πληρωμή καταγράφηκε με επιτυχία!", "success");
     elpayDialog.close();
 }
+
     function openBulkDialog() {
         renderBulkList();
         el('bulkDialog').showModal();
