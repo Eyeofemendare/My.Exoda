@@ -402,18 +402,22 @@
     function persistCategories(){ localStorage.setItem(CATEGORY_KEY, JSON.stringify(getCategories())); }
     function persistPaymentMethods(){ localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(getPaymentMethods())); }
 
-function addMonths(date, months) {
-    let d = new Date(date);
-    let newMonth = d.getMonth() + months;
-    let yearsToAdd = Math.floor(newMonth / 12);
-    let finalMonth = newMonth % 12;
-    if (finalMonth < 0) {
-        finalMonth += 12;
-        yearsToAdd -= 1;
-    }
-    d.setFullYear(d.getFullYear() + yearsToAdd);
-    d.setMonth(finalMonth);
-    return d;
+function addMonths(dateString, months) {
+    // Δημιουργία αντικειμένου Date από string με σωστή μορφή (YYYY-MM-DD)
+    let parts = dateString.split('-');
+    let year = parseInt(parts[0], 10);
+    let month = parseInt(parts[1], 10) - 1; // 0-based μήνας
+    let day = parseInt(parts[2], 10);
+
+    let d = new Date(year, month, day);
+    d.setMonth(d.getMonth() + months);
+
+    // Επιστροφή ημερομηνίας σε μορφή YYYY-MM-DD
+    let yyyy = d.getFullYear();
+    let mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    let dd = d.getDate().toString().padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
 }
 
     function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
