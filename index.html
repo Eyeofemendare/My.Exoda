@@ -1023,10 +1023,10 @@ if (exp.repeatInterval > 0) {
     function generatePDF(){
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.setFont("Helvetica", "bold");
+      doc.setFont("Arial", "bold");
       doc.setFontSize(22);
       doc.text("Μηνιαία Έξοδα Pro", 14, 20);
-      doc.setFont("Helvetica", "normal");
+      doc.setFont("Arial", "normal");
       doc.setFontSize(10);
       doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
       
