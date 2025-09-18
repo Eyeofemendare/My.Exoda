@@ -75,7 +75,8 @@
         <button class="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm" id="btnPDF">📄 Εξαγωγή PDF</button>
         <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm" id="btnExport">💾 Export</button>
         <button class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm" id="btnImport">📂 Import</button>
-        <button class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm" id="btnAdd">+ Προσθήκη Εξόδου</button>
+<button id="btnAdd" class="hidden"></button>
+<button class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm" id="btnManageExpenses">💰 Διαχείριση Εξόδων</button>
       </nav>
     </div>
   </header>
@@ -307,6 +308,20 @@
       <button id="confirm-ok" class="px-4 py-2 rounded-lg bg-red-600 text-white">Επιβεβαίωση</button>
     </div>
   </dialog>
+
+<dialog id="manageExpensesDialog" class="rounded-lg p-0 w-full max-w-3xl">
+  <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <h3 class="text-xl font-semibold mb-4">Διαχείριση Εξόδων</h3>
+    <div class="space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar">
+      <ul id="manageExpenseList" class="divide-y divide-gray-200 dark:divide-gray-700"></ul>
+    </div>
+    <div class="mt-6 flex justify-end gap-2">
+      <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('manageExpensesDialog').close()">Κλείσιμο</button>
+      <button id="addNewExpense" class="px-4 py-2 rounded-lg bg-primary text-white">➕ Προσθήκη</button>
+    </div>
+  </div>
+</dialog>
+
 
   <input id="importInput" type="file" accept="application/json" class="hidden"/>
 
@@ -570,29 +585,41 @@
     }
 
     function renderReminders(){
-      const holder = el('upcomingReminders');
-      holder.innerHTML = '';
-      
-      const unpaid = state.expenses
-        .filter(x => !x.payments || x.payments.length === 0)
-        .sort((a,b) => (a.dueDate||'').localeCompare(b.dueDate||''));
-        
-      if (!unpaid.length){
-        holder.innerHTML = `<div class="text-gray-500">Δεν υπάρχουν ανεξόφλητα έξοδα.</div>`;
-        return;
-      }
-      
-      unpaid.forEach(x => {
-        const d = new Date(x.dueDate).toLocaleDateString('el-GR');
-        const row = document.createElement('div');
-        row.className = "flex items-center justify-between bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2";
-        row.innerHTML = `
-          <div class="text-sm"><span class="font-semibold">${x.title}</span> — <span class="opacity-80">${d}</span></div>
-          <div class="font-bold">${fmtEUR(x.amount)}</div>
-        `;
-        holder.appendChild(row);
-      });
-    }
+  const holder = el('upcomingReminders');
+  holder.innerHTML = '';
+
+  const now = state.currentViewDate;
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const unpaid = state.expenses
+    .filter(x => {
+      if (x.payments && x.payments.length > 0) return false;
+      const d = fromYMD(x.dueDate);
+      if (!d) return false;
+      // δείχνουμε έξοδα τρέχοντος και προηγούμενων μηνών
+      return (d.getFullYear() < year) ||
+             (d.getFullYear() === year && d.getMonth() <= month);
+    })
+    .sort((a,b) => (a.dueDate||'').localeCompare(b.dueDate||''));
+
+  if (!unpaid.length){
+    holder.innerHTML = `<div class="text-gray-500">Δεν υπάρχουν ανεξόφλητα έξοδα.</div>`;
+    return;
+  }
+
+  unpaid.forEach(x => {
+    const d = new Date(x.dueDate).toLocaleDateString('el-GR');
+    const row = document.createElement('div');
+    row.className = "flex items-center justify-between bg-white dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2";
+    row.innerHTML = `
+      <div class="text-sm"><span class="font-semibold">${x.title}</span> — <span class="opacity-80">${d}</span></div>
+      <div class="font-bold">${fmtEUR(x.amount)}</div>
+    `;
+    holder.appendChild(row);
+  });
+}
+
 
     function renderList(){
       const list = el('expenseList');
@@ -837,13 +864,12 @@
         exp.payments.push(newPayment);
 
         // If paid and has a repeat interval, create a new one
-        if (exp.repeatInterval > 0) {
-            // Decide base date for the new due date
-            const baseDate = exp.repeatBase === 'payment' ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
-            const nextDueDate = addMonths(baseDate, exp.repeatInterval);
-            const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval, exp.repeatBase);
-            state.expenses.unshift(newExp);
-        }
+if (exp.repeatInterval > 0) {
+    const baseDate = exp.repeatBase === 'payment' ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
+    const nextDueDate = addMonths(baseDate, exp.repeatInterval);
+    const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval, exp.repeatBase);
+    state.expenses.unshift(newExp);
+}
         
         persist();
         renderAll();
@@ -1012,7 +1038,7 @@
         (exp.payments && exp.payments.length > 0) ? 'Πληρωμένο' : 'Ανεξόφλητο'
       ]);
 
-            doc.autoTable({
+         doc.autoTable({
         startY: 35,
         head: [['Τίτλος', 'Ποσό', 'Κατηγορία', 'Ημ/νία Λήξης', 'Κατάσταση']],
         body: tableData,
@@ -1042,17 +1068,18 @@
         el('historyDialog').showModal();
     }
 
-    function undoLastPayment() {
-        const id = el('undoPaymentBtn').dataset.id;
-        const exp = getExpenseById(id);
-        if (!exp || !exp.payments || exp.payments.length === 0) return;
-        exp.payments.pop();
-        persist();
-        renderAll();
-        notify('Η τελευταία πληρωμή αναιρέθηκε!', 'warn');
-        el('historyDialog').close();
-    }
+function undoLastPayment() {
+  const id = el('undoPaymentBtn').dataset.id;
+  const exp = getExpenseById(id);
+  if (!exp || !exp.payments || exp.payments.length === 0) return;
 
+  exp.payments.pop();
+
+  persist();
+  renderAll();
+  notify('Η τελευταία πληρωμή αναιρέθηκε!', 'warn');
+  el('historyDialog').close();
+}
     // =========================
     // Event Bindings
     // =========================
@@ -1187,7 +1214,68 @@
             notify('Η κατηγορία διαγράφηκε!', 'success');
         });
     }
+
+// =========================
+// Διαχείριση Εξόδων (Νέος Διάλογος)
+// =========================
+function renderManageExpenses() {
+  const list = el('manageExpenseList');
+  list.innerHTML = '';
+
+  // Δείχνουμε μόνο ανεξόφλητα
+  const expenses = state.expenses.filter(x => !x.payments || x.payments.length === 0);
+
+  if (expenses.length === 0) {
+    list.innerHTML = `<li class="p-6 text-center text-gray-500">Δεν υπάρχουν ανεξόφλητα έξοδα.</li>`;
+    return;
+  }
+
+  expenses
+    .sort((a,b)=> new Date(b.dueDate) - new Date(a.dueDate))
+    .forEach(exp => {
+      const li = document.createElement('li');
+      const d = new Date(exp.dueDate).toLocaleDateString('el-GR');
+      li.className = "flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800";
+      li.innerHTML = `
+        <div>
+          <div class="font-medium">${exp.title}</div>
+          <div class="text-sm text-gray-500">${fmtEUR(exp.amount)} • ${d}</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="edit-expense px-2 py-1 rounded bg-blue-500 text-white text-xs" data-id="${exp.id}">✏️ Επεξεργασία</button>
+          <button class="delete-expense px-2 py-1 rounded bg-red-500 text-white text-xs" data-id="${exp.id}">🗑️ Διαγραφή</button>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+}
+
+// Άνοιγμα Διαλόγου Διαχείρισης Εξόδων
+el('btnManageExpenses').addEventListener('click', () => {
+  renderManageExpenses();
+  el('manageExpensesDialog').showModal();
+});
+
+// Προσθήκη νέου εξόδου
+el('addNewExpense').addEventListener('click', () => {
+  el('manageExpensesDialog').close();
+  openAddDialog();
+});
+
+// Ενέργειες στη λίστα Διαχείρισης
+el('manageExpenseList').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.classList.contains('edit-expense')) {
+    el('manageExpensesDialog').close();
+    openAddDialog(btn.dataset.id);
+  } else if (btn.classList.contains('delete-expense')) {
+    deleteExpense(btn.dataset.id);
+    renderManageExpenses();
+  }
+});
+
+
   </script>
 </body>
 </html>
-
