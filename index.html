@@ -22,7 +22,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.3/jspdf.umd.min.js"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     html, body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
@@ -1021,44 +1022,52 @@ if (exp.repeatInterval > 0) {
     }
 
     function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFont("Helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("Μηνιαία Έξοδα Pro", 14, 20);
-  doc.setFont("Helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
-  
-  const tableData = applyFilters(getFilteredExpenses()).map(exp => {
-    const isPaid = exp.payments && exp.payments.length > 0;
-    const payment = isPaid ? exp.payments[0] : {}; // Παίρνουμε τα στοιχεία της πρώτης πληρωμής
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-    const paymentDate = isPaid ? new Date(payment.date).toLocaleDateString('el-GR') : 'Ανεξόφλητο';
-    const paymentMethod = payment.method || '--';
-    const transactionId = payment.transactionId || '--';
-    const notes = payment.notes || '--';
+    // Εδώ προσθέτεις την γραμματοσειρά (π.χ., Noto Sans)
+    doc.addFileToVFS('NotoSans-Regular.ttf', '...');
+    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
     
-    return [
-      exp.title,
-      fmtEUR(exp.amount),
-      paymentDate,
-      paymentMethod,
-      transactionId,
-      notes
-    ];
-  });
+    // Ορίζεις τη νέα γραμματοσειρά
+    doc.setFont('NotoSans');
+    doc.setFontSize(22);
+    doc.text("Μηνιαία Έξοδα Pro", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
+    
+    const tableData = applyFilters(getFilteredExpenses()).map(exp => {
+      const isPaid = exp.payments && exp.payments.length > 0;
+      const payment = isPaid ? exp.payments[0] : {}; 
 
-  doc.autoTable({
-    startY: 35,
-    // Νέοι τίτλοι για τον πίνακα
-    head: [['Τίτλος', 'Ποσό', 'Ημ/νία Πληρωμής', 'Τρόπος Πληρωμής', 'Αρ. Συναλλαγής', 'Σημειώσεις']],
-    body: tableData,
-    styles: { font: "courier" } // Χρησιμοποιεί τη γραμματοσειρά courier
-  });
+      const paymentDate = isPaid ? new Date(payment.date).toLocaleDateString('el-GR') : 'Ανεξόφλητο';
+      const paymentMethod = payment.method || '--';
+      const transactionId = payment.transactionId || '--';
+      const notes = payment.notes || '--';
+      
+      return [
+        exp.title,
+        fmtEUR(exp.amount),
+        paymentDate,
+        paymentMethod,
+        transactionId,
+        notes
+      ];
+    });
 
-  doc.save(`expenses_${toYMD(new Date())}.pdf`);
+    doc.autoTable({
+      startY: 35,
+      head: [['Τίτλος', 'Ποσό', 'Ημ/νία Πληρωμής', 'Τρόπος Πληρωμής', 'Αρ. Συναλλαγής', 'Σημειώσεις']],
+      body: tableData,
+      // Ορίζεις τη νέα γραμματοσειρά για τον πίνακα
+      styles: { font: "NotoSans" },
+      headStyles: { font: "NotoSans" }
+    });
+
+    doc.save(`expenses_${toYMD(new Date())}.pdf`);
     }
+    
       
 
     function showPaymentHistory(id){
