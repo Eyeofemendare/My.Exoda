@@ -1021,31 +1021,45 @@ if (exp.repeatInterval > 0) {
     }
 
     function generatePDF(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFont("Helvetica", "bold");
-      doc.setFontSize(22);
-      doc.text("Μηνιαία Έξοδα Pro", 14, 20);
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
-      
-      const tableData = applyFilters(getFilteredExpenses()).map(exp => [
-        exp.title,
-        fmtEUR(exp.amount),
-        getCategories().find(c => c.id === exp.category)?.label || exp.category,
-        new Date(exp.dueDate).toLocaleDateString('el-GR'),
-        (exp.payments && exp.payments.length > 0) ? 'Πληρωμένο' : 'Ανεξόφλητο'
-      ]);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(22);
+  doc.text("Μηνιαία Έξοδα Pro", 14, 20);
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
+  
+  const tableData = applyFilters(getFilteredExpenses()).map(exp => {
+    const isPaid = exp.payments && exp.payments.length > 0;
+    const payment = isPaid ? exp.payments[0] : {}; // Παίρνουμε τα στοιχεία της πρώτης πληρωμής
 
-         doc.autoTable({
-        startY: 35,
-        head: [['Τίτλος', 'Ποσό', 'Κατηγορία', 'Ημ/νία Λήξης', 'Κατάσταση']],
-        body: tableData,
-      });
+    const paymentDate = isPaid ? new Date(payment.date).toLocaleDateString('el-GR') : 'Ανεξόφλητο';
+    const paymentMethod = payment.method || '--';
+    const transactionId = payment.transactionId || '--';
+    const notes = payment.notes || '--';
+    
+    return [
+      exp.title,
+      fmtEUR(exp.amount),
+      paymentDate,
+      paymentMethod,
+      transactionId,
+      notes
+    ];
+  });
 
-      doc.save(`expenses_${toYMD(new Date())}.pdf`);
+  doc.autoTable({
+    startY: 35,
+    // Νέοι τίτλοι για τον πίνακα
+    head: [['Τίτλος', 'Ποσό', 'Ημ/νία Πληρωμής', 'Τρόπος Πληρωμής', 'Αρ. Συναλλαγής', 'Σημειώσεις']],
+    body: tableData,
+    styles: { font: "courier" } // Χρησιμοποιεί τη γραμματοσειρά courier
+  });
+
+  doc.save(`expenses_${toYMD(new Date())}.pdf`);
     }
+      
 
     function showPaymentHistory(id){
         const exp = getExpenseById(id);
