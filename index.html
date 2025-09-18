@@ -1028,12 +1028,12 @@ if (exp.repeatInterval > 0) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Εδώ προσθέτεις την γραμματοσειρά (π.χ., Noto Sans)
-    doc.addFileToVFS('NotoSans-Regular.ttf', '...');
-    doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
+    // Εδώ προσθέτεις την γραμματοσειρά
+    // doc.addFileToVFS('NotoSans-Regular.ttf', '...');
+    // doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal');
     
-    // Ορίζεις τη νέα γραμματοσειρά
-    doc.setFont('NotoSans');
+    // Εδώ ορίζεις τη γραμματοσειρά για το κείμενο
+    // doc.setFont('NotoSans');
     doc.setFontSize(22);
     doc.text("Μηνιαία Έξοδα Pro", 14, 20);
     
@@ -1063,13 +1063,15 @@ if (exp.repeatInterval > 0) {
       startY: 35,
       head: [['Τίτλος', 'Ποσό', 'Ημ/νία Πληρωμής', 'Τρόπος Πληρωμής', 'Αρ. Συναλλαγής', 'Σημειώσεις']],
       body: tableData,
-      // Ορίζεις τη νέα γραμματοσειρά για τον πίνακα
-      styles: { font: "NotoSans" },
-      headStyles: { font: "NotoSans" }
+      // Και εδώ ορίζεις τη γραμματοσειρά για τον πίνακα
+      // styles: { font: "NotoSans" },
+      // headStyles: { font: "NotoSans" }
+      styles: { font: "courier" }
     });
 
     doc.save(`expenses_${toYMD(new Date())}.pdf`);
     }
+    
     
       
 
