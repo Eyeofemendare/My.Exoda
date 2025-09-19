@@ -20,7 +20,7 @@
   </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="./fonts.js"></script>
+. <script src="NotoSans-Regular-normal.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.3/Sortable.min.js"></script>
 
@@ -1022,32 +1022,34 @@ if (exp.repeatInterval > 0) {
     }
 
     function generatePDF(){
-  console.log(doc.getFontList());
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  doc.setFont("Inter", "normal"); // ✅ χρησιμοποίησε την Inter
+
+  // Προσθήκη της νέας γραμματοσειράς
+  doc.addFileToVFS('NotoSans-Regular-normal.ttf', '...'); // Εδώ μπαίνει το περιεχόμενο της γραμματοσειράς
+  doc.addFont('NotoSans-Regular-normal.ttf', 'NotoSans', 'normal');
+  doc.setFont('NotoSans');
+
   doc.setFontSize(22);
-  doc.text("Μηνιαία Έξοδα Pro", 14, 20)
-      doc.setFont("Helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
-      
-      const tableData = applyFilters(getFilteredExpenses()).map(exp => [
-        exp.title,
-        fmtEUR(exp.amount),
-        getCategories().find(c => c.id === exp.category)?.label || exp.category,
-        new Date(exp.dueDate).toLocaleDateString('el-GR'),
-        (exp.payments && exp.payments.length > 0) ? 'Πληρωμένο' : 'Ανεξόφλητο'
-      ]);
+  doc.text("Μηνιαία Έξοδα Pro", 14, 20);
+  doc.setFontSize(10);
+  doc.text(`Εξαγωγή για τον μήνα: ${el('currentMonth').textContent}`, 14, 26);
 
-         doc.autoTable({
-  startY: 35,
-  head: [['Τίτλος', 'Ποσό', 'Κατηγορία', 'Ημ/νία Λήξης', 'Κατάσταση']],
-  body: tableData,
-  styles: { font: "Inter", fontStyle: "normal" } // ✅
-});
+  const tableData = applyFilters(getFilteredExpenses()).map(exp => [
+    exp.title,
+    fmtEUR(exp.amount),
+    getCategories().find(c => c.id === exp.category)?.label || exp.category,
+    new Date(exp.dueDate).toLocaleDateString('el-GR'),
+    (exp.payments && exp.payments.length > 0) ? 'Πληρωμένο' : 'Ανεξόφλητο'
+  ]);
 
-      doc.save(`expenses_${toYMD(new Date())}.pdf`);
+  doc.autoTable({
+    startY: 35,
+    head: [['Τίτλος', 'Ποσό', 'Κατηγορία', 'Ημ/νία Λήξης', 'Κατάσταση']],
+    body: tableData,
+  });
+
+  doc.save(`expenses_${toYMD(new Date())}.pdf`);
     }
 
     function showPaymentHistory(id){
