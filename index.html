@@ -1,4 +1,4 @@
-﻿Να<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="el" class="h-full">
 <head>
 <meta charset="UTF-8" />
@@ -718,7 +718,7 @@ function renderReminders() {
           `<button class="history-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Ιστορικό Πληρωμών">
             🕚
           </button>` :
-          `<button class="pay-btn px-3 py-1 rounded-lg bg-green-500 text-white hover:bg-green-600" data-id="${x.id}" title="Καταγραφή Πληρωμής">
+          `<button class="pay-btn px-3 py-1 rounded-full hover:bg-green-600" data-id="${x.id}" title="Καταγραφή Πληρωμής">
             💸
              Πληρωμή
           </button>`}
@@ -1296,4 +1296,5 @@ if (btn.classList.contains('edit-expense')) {
 
 </script>
 </body>
+
 </html>
