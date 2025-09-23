@@ -685,7 +685,7 @@ function renderReminders() {
                `<button class="history-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Ιστορικό Πληρωμών">
                  🕚
                </button>` :
-               `<button class="pay-btn p-2 rounded-full bg-green-500 text-white hover:bg-green-600" data-id="${x.id}" title="Καταγραφή Πληρωμής">
+               `<button class="pay-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Καταγραφή Πληρωμής">
                   💸
                </button>`}
                <button class="delete-btn p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-700" data-id="${x.id}" title="Διαγραφή">
@@ -1292,3 +1292,4 @@ el('manageExpenseList').addEventListener('click', (e) => {
  </script>
 </body>
 </html>
+
