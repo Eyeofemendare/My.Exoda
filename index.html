@@ -931,30 +931,55 @@ function renderReminders() {
      dialog.showModal();
    }
    
-   function handlePayment(e){
-       e.preventDefault();
-       const id = el('payExpenseId').value;
-       const exp = getExpenseById(id);
-       if (!exp) return;
+function handlePayment(e){
+    e.preventDefault();
+    const id = el('payExpenseId').value;
+    const exp = getExpenseById(id);
+    if (!exp) return;
 
-       const newPayment = {
-           amount: Number(el('payAmount').value) || 0,
-           date: el('payDate').value,
-           method: el('payMethod').value,
-           notes: el('payNotes').value,
-           transactionNumber: el('payTransactionNumber').value
-       };
+    const newPayment = {
+        amount: Number(el('payAmount').value) || 0,
+        date: el('payDate').value,
+        method: el('payMethod').value,
+        notes: el('payNotes').value,
+        transactionNumber: el('payTransactionNumber').value
+    };
 
-       if (!exp.payments) exp.payments = [];
-       function finalizePaymentAssignment(monthChoice) {
-  // Ανάλογα με την επιλογή αλλάζουμε το dueDate
-  if (monthChoice === "next") {
-    const d = fromYMD(exp.dueDate);
-    d.setMonth(d.getMonth() + 1);
-    exp.dueDate = toYMD(d);
-  }
+    if (!exp.payments) exp.payments = [];
 
-  exp.payments.push(newPayment);
+    function finalize(choice) {
+        const payDate = fromYMD(newPayment.date);
+        const day = exp.dueDate.split("-")[2]; // κρατάμε την ημέρα λήξης
+
+        if (choice === "current") {
+            exp.dueDate = toYMD(new Date(payDate.getFullYear(), payDate.getMonth(), day));
+        } else if (choice === "next") {
+            exp.dueDate = toYMD(new Date(payDate.getFullYear(), payDate.getMonth() + 1, day));
+        }
+
+        exp.payments.push(newPayment);
+
+        // Αν έχει επανάληψη
+        if (exp.repeatInterval > 0) {
+            const baseDate = exp.repeatBase === 'payment' ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
+            const nextDueDate = addMonths(baseDate, exp.repeatInterval);
+            const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval, exp.repeatBase);
+            state.expenses.unshift(newExp);
+        }
+
+        persist();
+        renderAll();
+        notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
+        el('payDialog').close();
+    }
+
+    const paymentDay = new Date(newPayment.date).getDate();
+    if (paymentDay >= 27) {
+        showMonthChoice(newPayment.date, finalize);
+    } else {
+        finalize("current");
+    }
+}
 
   // Επαναλαμβανόμενο έξοδο
   if (exp.repeatInterval > 0) {
@@ -976,7 +1001,6 @@ if (paymentDay >= 27) {
 } else {
   finalizePaymentAssignment("current");
 }
-
 
        // If paid and has a repeat interval, create a new one
 if (exp.repeatInterval > 0) {
@@ -1431,48 +1455,50 @@ el('paymentHistoryList').addEventListener('click', (e) => {
 
 // Αποθήκευση αλλαγών
 el('editPaymentForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const exp = getExpenseById(el('editPaymentExpenseId').value);
-  if (!exp) return;
-  const idx = parseInt(el('editPaymentIndex').value, 10);
-  if (!exp.payments[idx]) return;
+    e.preventDefault();
+    const exp = getExpenseById(el('editPaymentExpenseId').value);
+    if (!exp) return;
+    const idx = parseInt(el('editPaymentIndex').value, 10);
+    if (!exp.payments[idx]) return;
 
-  const updatedPayment = {
-    amount: Number(el('editPayAmount').value),
-    date: el('editPayDate').value,
-    method: el('editPayMethod').value,
-    notes: el('editPayNotes').value,
-    transactionNumber: el('editPayTransactionNumber').value
-  };
+    const updatedPayment = {
+        amount: Number(el('editPayAmount').value),
+        date: el('editPayDate').value,
+        method: el('editPayMethod').value,
+        notes: el('editPayNotes').value,
+        transactionNumber: el('editPayTransactionNumber').value
+    };
 
-  const paymentDay = new Date(updatedPayment.date).getDate();
-  if (paymentDay >= 27) {
-    // Ρωτάμε τον χρήστη για τον μήνα
-    showMonthChoice(updatedPayment.date, (choice) => {
-      if (choice === "next") {
-        const d = fromYMD(exp.dueDate);
-        d.setMonth(d.getMonth() + 1);
-        exp.dueDate = toYMD(d);
-      }
-      exp.payments[idx] = updatedPayment;
-      persist();
-      renderAll();
-      showPaymentHistory(exp.id);
-      notify('Η πληρωμή ενημερώθηκε!', 'success');
-      el('editPaymentDialog').close();
-    });
-  } else {
-    exp.payments[idx] = updatedPayment;
-    persist();
-    renderAll();
-    showPaymentHistory(exp.id);
-    notify('Η πληρωμή ενημερώθηκε!', 'success');
-    el('editPaymentDialog').close();
-  }
+    function finalize(choice) {
+        const payDate = fromYMD(updatedPayment.date);
+        const day = exp.dueDate.split("-")[2]; // κρατάμε την ημέρα λήξης
+
+        if (choice === "current") {
+            exp.dueDate = toYMD(new Date(payDate.getFullYear(), payDate.getMonth(), day));
+        } else if (choice === "next") {
+            exp.dueDate = toYMD(new Date(payDate.getFullYear(), payDate.getMonth() + 1, day));
+        }
+
+        exp.payments[idx] = updatedPayment;
+
+        persist();
+        renderAll();
+        showPaymentHistory(exp.id);
+        notify('Η πληρωμή ενημερώθηκε!', 'success');
+        el('editPaymentDialog').close();
+    }
+
+    const paymentDay = new Date(updatedPayment.date).getDate();
+    if (paymentDay >= 27) {
+        showMonthChoice(updatedPayment.date, finalize);
+    } else {
+        finalize("current");
+    }
 });
 
 </script>
 </body>
 </html>
+
 
 
