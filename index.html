@@ -970,11 +970,14 @@ function renderReminders() {
   el("payDialog").close();
 }
 
-const paymentDay = new Date(newPayment.date).getDate();
-if (paymentDay >= 27) {
-  showMonthChoice(newPayment.date, finalizePaymentAssignment);
+const paymentMonth = new Date(newPayment.date).getMonth();
+const dueMonth = new Date(exp.dueDate).getMonth();
+const paymentYear = new Date(newPayment.date).getFullYear();
+const dueYear = new Date(exp.dueDate).getFullYear();
+if (paymentMonth !== dueMonth || paymentYear !== dueYear) {
+    showMonthChoice(newPayment.date, finalizePaymentAssignment);
 } else {
-  finalizePaymentAssignment("current");
+    finalizePaymentAssignment("current");
 }
 
 
