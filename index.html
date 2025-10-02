@@ -159,7 +159,7 @@
    <div class="max-w-6xl mx-auto px-4 py-8">
      <div>
        <h4 class="font-bold text-lg">Σχετικά</h4>
-       <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Εφαρμογή διαχείρισης μηνιαίων εξόδων από τον Μάριο με αγάπη!😘</p>
+       <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Εφαρμογή διαχείρισης μηνιαίων εξόδων από τον Μάριο με αγάπη!😘  V2.4</p>
      </div>
    </div>
    <div class="text-center text-xs text-gray-500 dark:text-gray-400 pb-6">© <span id="year"></span> Μηνιαία Έξοδα Pro</div>
@@ -246,6 +246,12 @@
        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('payDialog').close()">Ακύρωση</button>
        <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white">Καταγραφή</button>
      </div>
+<div class="md:col-span-2">
+  <label class="text-sm">Μήνας που θα συμπεριληφθεί το έξοδο</label>
+  <select id="expenseMonthChoice" 
+    class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+  </select>
+</div>
    </form>
  </dialog>
 
@@ -325,11 +331,6 @@
  </div>
 </dialog>
 
-<dialog id="monthChoiceDialog" class="confirmation-box">
-  <h3 class="text-gray-900 dark:text-gray-100">Επιλογή Μήνα</h3>
-  <p id="monthChoiceText" class="text-gray-600 dark:text-gray-400"></p>
-  <div class="flex justify-center gap-4" id="monthChoiceButtons"></div>
-</dialog>
 
 <dialog id="editPaymentDialog" class="rounded-lg p-0 w-full max-w-lg">
   <form id="editPaymentForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
@@ -457,20 +458,22 @@
      if (!payMethodSaved) localStorage.setItem(PAYMENT_METHOD_KEY, JSON.stringify(defaultPaymentMethods));
    }
 
-   function mkExpense(title, amount, category, dueDate, paid=false, notes='', repeatInterval=0, repeatBase='due') {
-     return {
-       id: crypto.randomUUID(),
-       title: String(title).trim(),
-       amount: Number(amount)||0,
-       category: category || 'other',
-       dueDate: toYMD(dueDate),
-       notes: String(notes||''),
-       repeatInterval: Number(repeatInterval) || 0,
-       repeatBase: repeatBase || 'due', // 'due' or 'payment'
-       createdAt: new Date().toISOString(),
-       payments: []
-     };
-   }
+function mkExpense(title, amount, category, dueDate, paid=false, notes='', repeatInterval=0, repeatBase='due', includedInMonth=null) {
+  return {
+    id: crypto.randomUUID(),
+    title: String(title).trim(),
+    amount: Number(amount)||0,
+    category: category || 'other',
+    dueDate: toYMD(dueDate),
+    notes: String(notes||''),
+    repeatInterval: Number(repeatInterval) || 0,
+    repeatBase: repeatBase || 'due',
+    createdAt: new Date().toISOString(),
+    payments: [],
+    includedInMonth: includedInMonth // ΝΕΟ ΠΕΔΙΟ
+  };
+}
+
 
    function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.expenses)); }
    function persistCategories(){ localStorage.setItem(CATEGORY_KEY, JSON.stringify(getCategories())); }
@@ -553,41 +556,6 @@
        renderAll();
    }
 
-function showMonthChoice(paymentDate, onChoice) {
-  const dialog = el("monthChoiceDialog");
-  const text = el("monthChoiceText");
-  const btnHolder = el("monthChoiceButtons");
-
-  const d = new Date(paymentDate);
-  const currentMonthName = d.toLocaleDateString("el-GR", { month: "long" });
-  const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  const nextMonthName = nextMonth.toLocaleDateString("el-GR", { month: "long" });
-
-  text.textContent = `Το έξοδο εξοφλήθηκε στα τέλη του μήνα. Θέλεις να συμπεριληφθεί στα έξοδα του ${currentMonthName} ή του ${nextMonthName};`;
-
-  btnHolder.innerHTML = "";
-
-  const btnCurrent = document.createElement("button");
-  btnCurrent.className = "px-4 py-2 rounded-lg bg-primary text-white";
-  btnCurrent.textContent = currentMonthName;
-  btnCurrent.onclick = () => {
-    dialog.close();
-    onChoice("current");
-  };
-
-  const btnNext = document.createElement("button");
-  btnNext.className = "px-4 py-2 rounded-lg bg-blue-600 text-white";
-  btnNext.textContent = nextMonthName;
-  btnNext.onclick = () => {
-    dialog.close();
-    onChoice("next");
-  };
-
-  btnHolder.appendChild(btnCurrent);
-  btnHolder.appendChild(btnNext);
-
-  dialog.showModal();
-}
 
    function getCategories(){ try { return JSON.parse(localStorage.getItem(CATEGORY_KEY))||defaultCategories; } catch { return defaultCategories; } }
    function getPaymentMethods(){ try { return JSON.parse(localStorage.getItem(PAYMENT_METHOD_KEY))||defaultPaymentMethods; } catch { return defaultPaymentMethods; } }
@@ -626,14 +594,20 @@ function showMonthChoice(paymentDate, onChoice) {
        });
    }
    
-   function getFilteredExpenses() {
-       const year = state.currentViewDate.getFullYear();
-       const month = state.currentViewDate.getMonth();
-       return state.expenses.filter(x => {
-           const expenseDate = fromYMD(x.dueDate);
-           return expenseDate && expenseDate.getFullYear() === year && expenseDate.getMonth() === month;
-       });
-   }
+  function getFilteredExpenses() {
+  const year = state.currentViewDate.getFullYear();
+  const month = state.currentViewDate.getMonth();
+
+  return state.expenses.filter(x => {
+    const dueDate = fromYMD(x.dueDate);
+    const effectiveMonth = (typeof x.includedInMonth === 'number') 
+      ? x.includedInMonth 
+      : (dueDate ? dueDate.getMonth() : null);
+    const effectiveYear = dueDate ? dueDate.getFullYear() : year;
+
+    return dueDate && effectiveYear === year && effectiveMonth === month;
+  });
+}
 
    function applyFilters(expenses){
      let items = [...expenses];
@@ -916,84 +890,88 @@ function renderReminders() {
      el('addDialog').close();
    }
 
-   function openPayDialog(id){
-     const dialog = el('payDialog');
-     const expense = getExpenseById(id);
-     if(!expense) return;
-     
-     el('payExpenseId').value = id;
-     el('payAmount').value = expense.amount;
-     el('payDate').value = toYMD(new Date());
-     el('payNotes').value = '';
-     el('payTransactionNumber').value = '';
+function openPayDialog(id) {
+  const dialog = el('payDialog');
+  const expense = getExpenseById(id);
+  if (!expense) return;
 
-     renderPaymentMethods();
-     dialog.showModal();
-   }
-   
-   function handlePayment(e){
-       e.preventDefault();
-       const id = el('payExpenseId').value;
-       const exp = getExpenseById(id);
-       if (!exp) return;
+  el('payExpenseId').value = id;
+  el('payAmount').value = expense.amount;
+  el('payDate').value = toYMD(new Date());
+  el('payNotes').value = '';
+  el('payTransactionNumber').value = '';
 
-       const newPayment = {
-           amount: Number(el('payAmount').value) || 0,
-           date: el('payDate').value,
-           method: el('payMethod').value,
-           notes: el('payNotes').value,
-           transactionNumber: el('payTransactionNumber').value
-       };
+  // Φτιάχνουμε λίστα με μήνες
+  const monthChoiceSelect = el('expenseMonthChoice');
+  monthChoiceSelect.innerHTML = '';
+  const months = [...Array(12).keys()].map(m =>
+    new Date(2000, m, 1).toLocaleString('el-GR', { month: 'long' })
+  );
+  const dueDate = fromYMD(expense.dueDate);
+  const dueMonth = dueDate.getMonth();
 
-       if (!exp.payments) exp.payments = [];
-       function finalizePaymentAssignment(monthChoice) {
-  // Ανάλογα με την επιλογή αλλάζουμε το dueDate
-  if (monthChoice === "next") {
-    const d = fromYMD(exp.dueDate);
-    d.setMonth(d.getMonth() + 1);
-    exp.dueDate = toYMD(d);
-  }
+  months.forEach((name, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    if (idx === dueMonth) opt.selected = true; // προεπιλογή: μήνας λήξης
+    monthChoiceSelect.appendChild(opt);
+  });
 
+  renderPaymentMethods();
+  dialog.showModal();
+}
+
+function handlePayment(e) {
+  e.preventDefault();
+  const id = el('payExpenseId').value;
+  const exp = getExpenseById(id);
+  if (!exp) return;
+
+  const selectedMonth = parseInt(el('expenseMonthChoice').value, 10);
+  const newAmount = Number(el('payAmount').value) || 0;
+
+  const newPayment = {
+    amount: newAmount,
+    date: el('payDate').value,
+    method: el('payMethod').value,
+    notes: el('payNotes').value,
+    transactionNumber: el('payTransactionNumber').value,
+    includedInMonth: selectedMonth
+  };
+
+  // Ενημερώνουμε ποσό
+  exp.amount = newAmount;
+
+  if (!exp.payments) exp.payments = [];
   exp.payments.push(newPayment);
 
-  // Επαναλαμβανόμενο έξοδο
+  // Αποθηκεύουμε σε ποιο μήνα πρέπει να εμφανίζεται
+  exp.includedInMonth = selectedMonth;
+
+  persist();
+
+  // Αν έχει επανάληψη → δημιουργούμε το επόμενο
   if (exp.repeatInterval > 0) {
-    const baseDate = exp.repeatBase === "payment" ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
+    const baseDate = exp.repeatBase === 'payment' ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
     const nextDueDate = addMonths(baseDate, exp.repeatInterval);
-    const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval, exp.repeatBase);
+    const newExp = mkExpense(
+      exp.title,
+      exp.amount,
+      exp.category,
+      nextDueDate,
+      false,
+      exp.notes,
+      exp.repeatInterval,
+      exp.repeatBase
+    );
     state.expenses.unshift(newExp);
   }
 
-  persist();
   renderAll();
-  notify("Η πληρωμή καταγράφηκε με επιτυχία!", "success");
-  el("payDialog").close();
+  notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
+  el('payDialog').close();
 }
-
-const paymentMonth = new Date(newPayment.date).getMonth();
-const dueMonth = new Date(exp.dueDate).getMonth();
-const paymentYear = new Date(newPayment.date).getFullYear();
-const dueYear = new Date(exp.dueDate).getFullYear();
-if (paymentMonth !== dueMonth || paymentYear !== dueYear) {
-    showMonthChoice(newPayment.date, finalizePaymentAssignment);
-} else {
-    finalizePaymentAssignment("current");
-}
-
-
-       // If paid and has a repeat interval, create a new one
-if (exp.repeatInterval > 0) {
-   const baseDate = exp.repeatBase === 'payment' ? fromYMD(newPayment.date) : fromYMD(exp.dueDate);
-   const nextDueDate = addMonths(baseDate, exp.repeatInterval);
-   const newExp = mkExpense(exp.title, exp.amount, exp.category, nextDueDate, false, exp.notes, exp.repeatInterval, exp.repeatBase);
-   state.expenses.unshift(newExp);
-}
-       
-       persist();
-       renderAll();
-       notify('Η πληρωμή καταγράφηκε με επιτυχία!', 'success');
-       el('payDialog').close();
-   }
 
    function openBulkDialog() {
        renderBulkList();
@@ -1477,6 +1455,5 @@ el('editPaymentForm').addEventListener('submit', (e) => {
 </script>
 </body>
 </html>
-
 
 
