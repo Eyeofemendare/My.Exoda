@@ -674,6 +674,12 @@ function renderReminders() {
         return;
     }
 
+ filtered.sort((a, b) => {
+    const unpaidA = a.payments.length === 0 ? 0 : 1;
+    const unpaidB = b.payments.length === 0 ? 0 : 1;
+    return unpaidA - unpaidB;
+  });
+ 
     reminders.forEach(x => {
         const d = new Date(x.dueDate).toLocaleDateString('el-GR');
         const row = document.createElement('div');
@@ -1455,5 +1461,6 @@ el('editPaymentForm').addEventListener('submit', (e) => {
 </script>
 </body>
 </html>
+
 
 
