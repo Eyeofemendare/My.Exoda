@@ -3,7 +3,7 @@
 <head>
  <meta charset="UTF-8" />
  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
- <title>Μηνιαία Έξοδα Pro v3</title>
+ <title>Μηνιαία Έξοδα Pro V3.1</title>
 
  <link rel="manifest" href="./manifest.json">
 
@@ -70,15 +70,12 @@
          <span id="themeIcon" class="text-lg">🌙</span>
        </button>
      </div>
-     <nav class="flex flex-wrap gap-2">
-       <button class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm" id="btnManageCategories">🏷️ Διαχείριση Κατηγοριών</button>
-       <button class="btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm" id="btnBulk">📑 Μαζική Καταχώρηση</button>
-       <button class="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm" id="btnPDF">📄 Εξαγωγή PDF</button>
-       <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm" id="btnExport">💾 Export</button>
-       <button class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm" id="btnImport">📂 Import</button>
-<button id="btnAdd" class="hidden"></button>
-<button class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm" id="btnManageExpenses">💰 Διαχείριση Εξόδων</button>
-     </nav>
+    <nav class="relative">
+  <button id="menuToggle" 
+    class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm">
+    ☰ Μενού
+  </button>
+</nav>
    </div>
  </header>
 
@@ -117,26 +114,11 @@
      </aside>
    </section>
 
-   <section class="space-y-3">
-     <h3 class="sr-only">Φίλτρα Κατηγοριών</h3>
-     <div class="flex flex-wrap gap-2" id="categoryFilters">
-       </div>
-     <div class="flex flex-col md:flex-row items-center gap-3">
-       <input id="searchInput" type="search" placeholder="Αναζήτηση τίτλου/σημειώσεων…" class="w-full md:w-80 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
-       <select id="statusFilter" class="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
-         <option value="">Όλα</option>
-         <option value="paid">Μόνο πληρωμένα</option>
-         <option value="unpaid">Μόνο ανεξόφλητα</option>
-       </select>
-       <select id="sortSelect" class="w-full md:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
-         <option value="dueDateAsc">Ημ/νία λήξης ↑</option>
-         <option value="dueDateDesc">Ημ/νία λήξης ↓</option>
-         <option value="amountDesc">Ποσό ↓</option>
-         <option value="amountAsc">Ποσό ↑</option>
-         <option value="titleAsc">Τίτλος A–Ω</option>
-       </select>
-     </div>
-   </section>
+<section class="space-y-3">
+  <button id="openFiltersDialog" class="px-4 py-2 rounded-lg bg-primary text-white">
+    🔎 Φίλτρα
+  </button>
+</section>
 
    <section>
      <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
@@ -211,6 +193,24 @@
      </div>
    </form>
  </dialog>
+
+<dialog id="menuDialog" class="rounded-lg p-0 w-full max-w-sm">
+  <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <h3 class="text-xl font-semibold mb-4">Ενέργειες</h3>
+    <div class="flex flex-col gap-3">
+      <button class="btn bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm" id="btnManageCategories">🏷️ Διαχείριση Κατηγοριών</button>
+      <button class="btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm" id="btnBulk">📑 Μαζική Καταχώρηση</button>
+      <button class="btn bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm" id="btnPDF">📄 Εξαγωγή PDF</button>
+      <button class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm" id="btnExport">💾 Export</button>
+      <button class="btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm" id="btnImport">📂 Import</button>
+      <button class="btn bg-primary hover:bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm" id="btnManageExpenses">💰 Διαχείριση Εξόδων</button>
+    </div>
+    <div class="mt-6 flex justify-end">
+      <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800"
+        onclick="el('menuDialog').close()">Κλείσιμο</button>
+    </div>
+  </div>
+</dialog>
 
  <dialog id="payDialog" class="rounded-lg p-0 w-full max-w-lg">
    <form id="payForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
@@ -331,6 +331,43 @@
  </div>
 </dialog>
 
+<dialog id="filtersDialog" class="rounded-lg p-0 w-full max-w-lg">
+  <div class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <h3 class="text-xl font-semibold mb-4">Φίλτρα Αναζήτησης</h3>
+
+    <div class="space-y-4">
+      <input id="searchInputDialog" type="search" placeholder="Αναζήτηση τίτλου/σημειώσεων…" 
+        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+
+      <select id="statusFilterDialog" 
+        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <option value="">Όλα</option>
+        <option value="paid">Μόνο πληρωμένα</option>
+        <option value="unpaid">Μόνο ανεξόφλητα</option>
+      </select>
+
+      <select id="sortSelectDialog" 
+        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <option value="dueDateAsc">Ημ/νία λήξης ↑</option>
+        <option value="dueDateDesc">Ημ/νία λήξης ↓</option>
+        <option value="amountDesc">Ποσό ↓</option>
+        <option value="amountAsc">Ποσό ↑</option>
+        <option value="titleAsc">Τίτλος A–Ω</option>
+      </select>
+
+      <select id="categoryFilterDialog" 
+        class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <option value="">Όλες οι Κατηγορίες</option>
+      </select>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800"
+        onclick="el('filtersDialog').close()">Ακύρωση</button>
+      <button id="applyFilters" class="px-4 py-2 rounded-lg bg-primary text-white">Εφαρμογή</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="editPaymentDialog" class="rounded-lg p-0 w-full max-w-lg">
   <form id="editPaymentForm" class="p-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100" method="dialog">
@@ -560,28 +597,20 @@ function mkExpense(title, amount, category, dueDate, paid=false, notes='', repea
    function getCategories(){ try { return JSON.parse(localStorage.getItem(CATEGORY_KEY))||defaultCategories; } catch { return defaultCategories; } }
    function getPaymentMethods(){ try { return JSON.parse(localStorage.getItem(PAYMENT_METHOD_KEY))||defaultPaymentMethods; } catch { return defaultPaymentMethods; } }
 
-   function renderFilters(){
-     const cats = [{ id: '', label: 'Όλες οι Κατηγορίες', icon: '' }, ...getCategories()];
-     const wrap = document.getElementById('categoryFilters');
-     wrap.innerHTML = '';
-     // Render filter buttons
-     cats.forEach(c=>{
-       const btn = document.createElement('button');
-       btn.className = `px-3 py-1 rounded-full text-sm transition-colors ${state.filterCategory===c.id ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`;
-       btn.textContent = c.label;
-       btn.addEventListener('click', ()=>{ state.filterCategory=c.id; renderAll(); });
-       wrap.appendChild(btn);
-     });
-     // Render select options for add dialog
-     const categorySelect = el('categoryInput');
-     categorySelect.innerHTML = '';
-     getCategories().forEach(c => {
-       const option = document.createElement('option');
-       option.value = c.id;
-       option.textContent = c.label;
-       categorySelect.appendChild(option);
-     });
-   }
+function renderFilters(){
+  const catSelect = el("categoryFilterDialog");
+  if (!catSelect) return; // αν δεν υπάρχει, απλά έξοδος
+
+  catSelect.innerHTML = '<option value="">Όλες οι Κατηγορίες</option>';
+  getCategories().forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.label;
+    if (c.id === state.filterCategory) opt.selected = true;
+    catSelect.appendChild(opt);
+  });
+}
+
    
    function renderPaymentMethods() {
        const select = el('payMethod');
@@ -1190,6 +1219,14 @@ function undoLastPayment() {
  notify('Η τελευταία πληρωμή αναιρέθηκε!', 'warn');
  el('historyDialog').close();
 }
+
+const menuBtn = el("menuToggle");
+if (menuBtn) {
+  menuBtn.addEventListener("click", () => {
+    el("menuDialog").showModal();
+  });
+}
+
    // =========================
    // Event Bindings
    // =========================
@@ -1199,27 +1236,45 @@ function undoLastPayment() {
        renderAll();
 
        el('themeToggle').addEventListener('click', toggleTheme);
-       el('btnAdd').addEventListener('click', ()=> openAddDialog());
        el('saveExpense').addEventListener('click', saveExpense);
        el('addForm').addEventListener('submit', saveExpense);
 
        el('prevMonthBtn').addEventListener('click', ()=> changeMonth(-1));
        el('nextMonthBtn').addEventListener('click', ()=> changeMonth(1));
 
-       el('statusFilter').addEventListener('change', e=> { state.statusFilter=e.target.value; renderAll(); });
-       el('searchInput').addEventListener('input', e=> { state.search=e.target.value; renderAll(); });
-       el('sortSelect').addEventListener('change', e=> { state.sort=e.target.value; renderAll(); });
-       el('unpaidFilter').addEventListener('change', e=> { state.unpaidFilter=e.target.value; renderReminders(); });
+// Άνοιγμα/κλείσιμο μενού
+ el("menuToggle").addEventListener("click", () => {
+    el("menuDialog").showModal();
+  });
 
+  el("menuDialog").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
 
-       el('btnPDF').addEventListener('click', generatePDF);
-       el('btnExport').addEventListener('click', exportData);
-       el('btnImport').addEventListener('click', ()=> el('importInput').click());
-       el('importInput').addEventListener('change', importData);
-
-       el('btnBulk').addEventListener('click', openBulkDialog);
-       el('bulkSave').addEventListener('click', handleBulkSave);
-
+    switch (btn.id) {
+      case "btnManageCategories":
+        renderCategoryList();
+        el("categoryDialog").showModal();
+        break;
+      case "btnBulk":
+        openBulkDialog();
+        break;
+      case "btnPDF":
+        generatePDF();
+        break;
+      case "btnExport":
+        exportData();
+        break;
+      case "btnImport":
+        el("importInput").click();
+        break;
+      case "btnManageExpenses":
+        renderManageExpenses();
+        el("manageExpensesDialog").showModal();
+        break;
+    }
+  });
+});
        el('payForm').addEventListener('submit', handlePayment);
        el('undoPaymentBtn').addEventListener('click', undoLastPayment);
 
@@ -1262,7 +1317,7 @@ function undoLastPayment() {
                renderPaymentMethods();
            }
        });
-   });
+
 
    // =========================
    // Categories
@@ -1455,6 +1510,36 @@ el('editPaymentForm').addEventListener('submit', (e) => {
     notify('Η πληρωμή ενημερώθηκε!', 'success');
     el('editPaymentDialog').close();
   }
+});
+
+// Άνοιγμα παραθύρου φίλτρων
+el("openFiltersDialog").addEventListener("click", () => {
+  el("searchInputDialog").value = state.search;
+  el("statusFilterDialog").value = state.statusFilter;
+  el("sortSelectDialog").value = state.sort;
+
+  const catSelect = el("categoryFilterDialog");
+  catSelect.innerHTML = '<option value="">Όλες οι Κατηγορίες</option>';
+  getCategories().forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.id;
+    opt.textContent = c.label;
+    if (c.id === state.filterCategory) opt.selected = true;
+    catSelect.appendChild(opt);
+  });
+
+  el("filtersDialog").showModal();
+});
+
+// Εφαρμογή φίλτρων
+el("applyFilters").addEventListener("click", () => {
+  state.search = el("searchInputDialog").value;
+  state.statusFilter = el("statusFilterDialog").value;
+  state.sort = el("sortSelectDialog").value;
+  state.filterCategory = el("categoryFilterDialog").value;
+
+  renderAll();
+  el("filtersDialog").close();
 });
 
 </script>
