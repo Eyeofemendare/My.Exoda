@@ -1261,34 +1261,45 @@ function handlePayment(e) {
  doc.save(`expenses_${toYMD(new Date())}.pdf`);
    }
 
-   function showPaymentHistory(id){
-       const exp = getExpenseById(id);
-       if (!exp || !exp.payments || exp.payments.length === 0) return;
+   function showPaymentHistory(id) {
+  const exp = getExpenseById(id);
+  if (!exp) return;
 
-       const list = el('paymentHistoryList');
-     function getMethodLabel(methodId) {
-  const method = getPaymentMethods().find(m => m.id === methodId);
-  return method ? method.label : methodId;
-}
-list.innerHTML = '';
-exp.payments.forEach((p, idx) => {
-    const item = document.createElement('div');
-    item.className = 'border-b border-gray-200 dark:border-gray-700 pb-2';
-    item.innerHTML = `
-      <div class="font-medium">${fmtEUR(p.amount)} - ${new Date(p.date).toLocaleDateString('el-GR')}</div>
-      <div class="text-xs text-gray-500 dark:text-gray-400">Μέθοδος: ${getMethodLabel(p.method)}</div>
-      <div class="text-xs text-gray-500 dark:text-gray-400">Σημειώσεις: ${p.notes||''}</div>
-      ${p.transactionNumber ? `<div class="text-xs text-gray-500 dark:text-gray-400">Συναλλαγή: ${p.transactionNumber}</div>` : ''}
-      <div class="mt-2">
-        <button class="edit-payment px-2 py-1 rounded bg-blue-500 text-white text-xs" 
-                data-expid="${exp.id}" data-idx="${idx}">✏️ Επεξεργασία</button>
-      </div>
-    `;
-    list.appendChild(item);
-});
+  const list = el('paymentHistoryList');
+  const titleElement = el('historyDialog').querySelector('h3');
+  const titleName = exp.title || 'Εξόδου';
+  titleElement.textContent = `Ιστορικό Πληρωμών – ${titleName}`;
 
-       el('undoPaymentBtn').dataset.id = exp.id;
-       el('historyDialog').showModal();
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth() - 13, now.getDate()); // 13 μήνες πίσω
+
+  // Πάρε όλες τις πληρωμές από έξοδα με το ίδιο title
+  const relatedPayments = state.expenses
+    .filter(x => x.title === exp.title)
+    .flatMap(x => (x.payments || []).map(p => ({ ...p, parentId: x.id })))
+    .filter(p => new Date(p.date) >= cutoff)
+    .sort((a, b) => new Date(b.date) - new Date(a.date)); // πιο πρόσφατες πρώτες
+
+  list.innerHTML = '';
+
+  if (relatedPayments.length === 0) {
+    list.innerHTML = `<div class="text-gray-500">Δεν βρέθηκαν πληρωμές για τους τελευταίους 13 μήνες.</div>`;
+  } else {
+    relatedPayments.forEach((p, idx) => {
+      const item = document.createElement('div');
+      item.className = 'border-b border-gray-200 dark:border-gray-700 pb-2';
+      item.innerHTML = `
+        <div class="font-medium">${fmtEUR(p.amount)} - ${new Date(p.date).toLocaleDateString('el-GR')}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">Μέθοδος: ${getPaymentMethods().find(m => m.id === p.method)?.label || p.method}</div>
+        ${p.notes ? `<div class="text-xs text-gray-500 dark:text-gray-400">Σημειώσεις: ${p.notes}</div>` : ''}
+        ${p.transactionNumber ? `<div class="text-xs text-gray-500 dark:text-gray-400">Συναλλαγή: ${p.transactionNumber}</div>` : ''}
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  el('undoPaymentBtn').dataset.id = exp.id;
+  el('historyDialog').showModal();
    }
 
 function undoLastPayment() {
@@ -1681,6 +1692,7 @@ el("applyFilters").addEventListener("click", () => {
 </script>
 </body>
 </html>
+
 
 
 
