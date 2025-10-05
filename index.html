@@ -210,9 +210,15 @@
        <label class="text-sm">Σημειώσεις</label>
        <textarea id="notesInput" rows="3" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"></textarea>
      </div>
-     <div class="mt-6 flex justify-end gap-2">
-       <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('addDialog').close()">Ακύρωση</button>
-       <button id="saveExpense" class="px-4 py-2 rounded-lg bg-primary text-white">Αποθήκευση</button>
+     <div class="mt-6 flex justify-between items-center">
+  <button id="deleteExpense" type="button" 
+    class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm hidden">
+    🗑️ Διαγραφή
+  </button> 
+      <div class="flex gap-2">
+    <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-800" onclick="el('addDialog').close()">Ακύρωση</button>
+    <button id="saveExpense" class="px-4 py-2 rounded-lg bg-primary text-white">Αποθήκευση</button>
+  </div>
      </div>
    </form>
  </dialog>
@@ -817,9 +823,6 @@ function renderReminders() {
                `<button class="pay-btn p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-700" data-id="${x.id}" title="Καταγραφή Πληρωμής">
                   💸
                </button>`}
-               <button class="delete-btn p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-700" data-id="${x.id}" title="Διαγραφή">
-                 🗑️
-               </button>
            </div>
        </div>
                <div>${new Date(x.dueDate).toLocaleDateString('el-GR')}</div>
@@ -849,9 +852,6 @@ function renderReminders() {
            `<button class="pay-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${x.id}" title="Καταγραφή Πληρωμής">
              💸
            </button>`}
-           <button class="delete-btn p-2 rounded-full hover:bg-red-200 dark:hover:bg-red-700" data-id="${x.id}" title="Διαγραφή">
-             🗑️
-           </button>
          </div>
        </div>
        `;
@@ -962,7 +962,10 @@ function renderReminders() {
       el('expenseId').value = exp.id;
       el('titleInput').value = exp.title;
       el('amountInput').value = exp.amount;
-      
+  el('deleteExpense').classList.remove('hidden'); // δείξε κουμπί διαγραφής
+} else {
+  el('deleteExpense').classList.add('hidden'); // απόκρυψέ το σε νέα προσθήκη
+      }
       // Το value τώρα θα λειτουργήσει επειδή υπάρχουν επιλογές:
       el('categoryInput').value = exp.category; 
       
@@ -1715,9 +1718,27 @@ el("applyFilters").addEventListener("click", () => {
   el("filtersDialog").close();
 });
 
+  // Διαγραφή μέσα από το μενού επεξεργασίας
+el('deleteExpense').addEventListener('click', () => {
+  const id = el('expenseId').value;
+  if (!id) return;
+
+  const exp = getExpenseById(id);
+  if (!exp) return;
+
+  showConfirmation(`Να διαγραφεί το έξοδο "${exp.title}";`, () => {
+    state.expenses = state.expenses.filter(x => x.id !== id);
+    persist();
+    renderAll();
+    el('addDialog').close();
+    notify('Το έξοδο διαγράφηκε με επιτυχία!', 'success');
+  });
+});
+  
 </script>
 </body>
 </html>
+
 
 
 
