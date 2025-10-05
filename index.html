@@ -1579,7 +1579,33 @@ el('paymentHistoryList').addEventListener('click', (e) => {
 
   el('editPaymentDialog').showModal();
 });
+el('editPaymentForm').addEventListener('submit', handleEditPayment);
 
+function handleEditPayment(e) {
+  e.preventDefault();
+
+  const expId = el('editPaymentExpenseId').value;
+  const idx = parseInt(el('editPaymentIndex').value, 10);
+  const exp = getExpenseById(expId);
+
+  if (!exp || !exp.payments || idx < 0 || idx >= exp.payments.length) {
+    notify('Σφάλμα: Δεν βρέθηκε η πληρωμή για επεξεργασία.', 'error');
+    return;
+  }
+
+  const pay = exp.payments[idx];
+  pay.amount = Number(el('editPayAmount').value) || pay.amount;
+  pay.date = el('editPayDate').value || pay.date;
+  pay.method = el('editPayMethod').value || pay.method;
+  pay.transactionNumber = el('editPayTransactionNumber').value || '';
+  pay.notes = el('editPayNotes').value || '';
+
+  persist();
+  renderAll();
+  notify('Η πληρωμή ενημερώθηκε επιτυχώς!', 'success');
+  el('editPaymentDialog').close();
+}
+  
 // Αποθήκευση αλλαγών
 el('editPaymentForm').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -1655,6 +1681,7 @@ el("applyFilters").addEventListener("click", () => {
 </script>
 </body>
 </html>
+
 
 
 
