@@ -1276,7 +1276,12 @@ function handlePayment(e) {
   // Πάρε όλες τις πληρωμές από έξοδα με το ίδιο title
   const relatedPayments = state.expenses
     .filter(x => x.title === exp.title)
-    .flatMap(x => (x.payments || []).map(p => ({ ...p, parentId: x.id })))
+    .flatMap(x => (x.payments || []).map((p, idx) => ({
+      ...p,
+      parentId: x.id,
+      index: idx,
+      parentTitle: x.title
+    })))
     .filter(p => new Date(p.date) >= cutoff)
     .sort((a, b) => new Date(b.date) - new Date(a.date)); // πιο πρόσφατες πρώτες
 
@@ -1285,20 +1290,41 @@ function handlePayment(e) {
   if (relatedPayments.length === 0) {
     list.innerHTML = `<div class="text-gray-500">Δεν βρέθηκαν πληρωμές για τους τελευταίους 13 μήνες.</div>`;
   } else {
-    relatedPayments.forEach((p, idx) => {
+    relatedPayments.forEach((p) => {
       const item = document.createElement('div');
-      item.className = 'border-b border-gray-200 dark:border-gray-700 pb-2';
+      item.className = 'border-b border-gray-200 dark:border-gray-700 pb-2 flex justify-between items-center';
+
       item.innerHTML = `
-        <div class="font-medium">${fmtEUR(p.amount)} - ${new Date(p.date).toLocaleDateString('el-GR')}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">Μέθοδος: ${getPaymentMethods().find(m => m.id === p.method)?.label || p.method}</div>
-        ${p.notes ? `<div class="text-xs text-gray-500 dark:text-gray-400">Σημειώσεις: ${p.notes}</div>` : ''}
-        ${p.transactionNumber ? `<div class="text-xs text-gray-500 dark:text-gray-400">Συναλλαγή: ${p.transactionNumber}</div>` : ''}
+        <div>
+          <div class="font-medium">${fmtEUR(p.amount)} - ${new Date(p.date).toLocaleDateString('el-GR')}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Μέθοδος: ${getPaymentMethods().find(m => m.id === p.method)?.label || p.method}</div>
+          ${p.notes ? `<div class="text-xs text-gray-500 dark:text-gray-400">Σημειώσεις: ${p.notes}</div>` : ''}
+          ${p.transactionNumber ? `<div class="text-xs text-gray-500 dark:text-gray-400">Συναλλαγή: ${p.transactionNumber}</div>` : ''}
+        </div>
+        <button 
+          class="edit-payment text-xl hover:scale-110 transition-transform" 
+          title="Επεξεργασία" 
+          data-expid="${p.parentId}" 
+          data-idx="${p.index}">✏️</button>
       `;
+
       list.appendChild(item);
     });
   }
 
+  // Κουμπί αναίρεσης
   el('undoPaymentBtn').dataset.id = exp.id;
+
+  // Ενεργοποίηση λειτουργίας edit
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('.edit-payment');
+    if (!btn) return;
+
+    const expId = btn.dataset.expid;
+    const idx = parseInt(btn.dataset.idx, 10);
+    openEditPaymentDialog(expId, idx);
+  });
+
   el('historyDialog').showModal();
    }
 
@@ -1692,6 +1718,7 @@ el("applyFilters").addEventListener("click", () => {
 </script>
 </body>
 </html>
+
 
 
 
